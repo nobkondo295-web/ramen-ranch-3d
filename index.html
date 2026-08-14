@@ -33,9 +33,10 @@ main{position:relative;min-height:0;overflow:hidden}#world{position:absolute;ins
 <section class="panel" id="panel-menu"><button class="close">×</button><h2>⚙️ メニュー</h2><div class="lead">時間帯とセーブを管理します。</div><div class="section"><h3>時間帯</h3><div class="toggle"><button class="seg" data-time="day">☀️ 昼</button><button class="seg" data-time="sunset">🌇 夕方</button><button class="seg" data-time="night">🌙 夜</button></div></div><div class="section"><div class="row"><button class="btn good" id="saveBtn">今すぐ保存</button><button class="btn alt" id="resetCam">視点リセット</button></div><div class="hint" id="saveInfo" style="text-align:center;margin-top:7px">自動セーブ有効</div></div><div class="section"><button class="btn danger" id="resetBtn">牧場データを初期化</button></div></section>
 <nav class="bottomnav"><button class="navbtn" data-open="scan"><span>📷</span>スキャン</button><button class="navbtn" data-open="grow"><span>🍥</span>育成</button><button class="navbtn" data-open="island"><span>🏝️</span>ランド</button><button class="navbtn" data-open="build"><span>🧱</span>建築</button><button class="navbtn" data-open="menu"><span>⚙️</span>設定</button></nav>
 <div class="toast" id="toast"></div><div class="flash" id="flash"></div>
-<button id="farmSickle" title="まとめて収穫" style="position:absolute;right:14px;top:92px;z-index:36;width:48px;height:48px;display:none;border:1px solid #ffffff33;border-radius:14px;background:#171b16ee;color:#fff;font-size:25px;box-shadow:0 8px 24px #0007;backdrop-filter:blur(10px)"><span style="font-size:23px">⚒️</span></button>
+
 <div id="farmSide" style="position:absolute;right:10px;top:84px;z-index:35;width:108px;display:none;background:#171b16ee;border:1px solid #ffffff22;border-radius:16px;padding:8px;backdrop-filter:blur(12px);box-shadow:0 10px 30px #0007">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><b style="font-size:10px">🌱 作物</b><button id="farmSideClose" style="border:0;background:#ffffff12;color:#fff;border-radius:9px;width:25px;height:25px">×</button></div>
+<div id="farmSideTools" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
 <div id="farmSideCrops" style="display:flex;flex-direction:column;gap:6px;max-height:58vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
 <div id="farmSideHint" style="font-size:8px;line-height:1.45;color:#bfc7b8;margin-top:7px">作物を選ぶと、畑をなぞって連続操作できます。</div>
 </div><div class="modal" id="creatureModal"><div class="modalbox"><h2 id="detailName">仲間の記録</h2><div class="detailtabs"><button class="detailtab active" data-detailtab="model">🐾 キャラクター</button><button class="detailtab" data-detailtab="photo">🍜 ラーメン</button></div><div class="detailview active" id="detailViewModel"><div class="modelstage" id="detailModelStage"><div class="modelhint">ドラッグで回転・ピンチでズーム・タップでリアクション</div></div><div class="affectionbox"><div class="affectionhead"><span>⭐ 経験値</span><b id="detailXP">0 / 100</b></div><div class="bar" style="height:9px"><i id="detailXPBar" style="width:0%"></i></div></div><div class="section" style="margin-top:12px"><h3>🍥 トッピングを渡す</h3><div class="grid" id="detailFoodGrid"></div><div class="hint">トッピングをタップすると、この仲間に直接渡します。</div></div></div><div class="detailview" id="detailViewPhoto"><img class="charphoto" id="detailPhoto" alt="読み込んだラーメン"><div class="detailmeta">この仲間を誕生させたラーメン</div><div class="facts"><div class="fact" style="grid-column:1/-1">撮影日<b id="detailTakenAt">-</b></div><div class="fact">ランド属性<b id="detailAttr">-</b></div><div class="fact">レベル<b id="detailLevel">-</b></div><div class="fact" style="grid-column:1/-1">タイプ<b id="detailType">-</b></div></div><div class="dangerzone"><p>この仲間と別れると、島からいなくなり元に戻せません。</p><button class="btn danger" id="partWaysBtn">この仲間と別れる</button></div></div><button class="btn" id="detailClose">閉じる</button></div></div><div class="modal" id="birthModal"><div class="modalbox"><h2>✨ 新しい仲間が誕生！</h2><div class="sub">この仲間はランドの中で暮らします</div><div class="birth"><img id="birthImg" alt=""><div class="born" id="birthEmoji">🍜</div></div><div class="facts"><div class="fact">名前<b id="birthName">-</b></div><div class="fact">タイプ<b id="birthType">-</b></div><div class="fact">性格<b id="birthTrait">-</b></div><div class="fact">住むランド<b id="birthLand">-</b></div></div><button class="btn" id="welcomeBtn">島に迎える</button></div></div>
@@ -290,33 +291,33 @@ function harvestFarmKey(key){
  state.coins+=crop.coins;f.crop=null;f.plantedAt=0;state.stats.harvests++;updateFarmVisual(key);return true
 }
 function renderFarmSide(){
- const box=$('#farmSideCrops');if(!box)return;box.innerHTML='';
+ const tools=$('#farmSideTools'),box=$('#farmSideCrops');if(!box||!tools)return;
+ tools.innerHTML='';box.innerHTML='';
+ const tapped=state.placed[farmTappedKey];
+ if(farmReady(tapped)){
+   const sickle=document.createElement('button');
+   sickle.className='farmsidecrop'+(farmHarvestMode?' active':'');
+   sickle.innerHTML='<span class="emo">🔪</span>鎌<br><small>まとめて収穫</small>';
+   sickle.onclick=e=>{e.stopPropagation();farmHarvestMode=true;farmAutoMode=false;renderFarmSide();$('#farmSideHint').textContent='鎌を選択中。完成した畑をなぞるとまとめて収穫します。';toast('鎌を選択しました')};
+   tools.appendChild(sickle)
+ }
  Object.entries(CROPS).forEach(([k,v])=>{
    const b=document.createElement('button');
    b.className='farmsidecrop'+(state.selectedCrop===k&&farmAutoMode?' active':'');
    b.innerHTML=`<span class="emo">${v.emoji}</span>${v.name}<br><small>${v.sec}秒</small>`;
-   b.onclick=e=>{e.stopPropagation();state.selectedCrop=k;farmAutoMode=true;farmHarvestMode=false;$('#farmSickle').style.display='none';renderFarmSide();$('#farmSideHint').textContent=`${v.name}を選択中。空き畑をなぞると連続で植えられます。`;toast(`${v.name}を選択しました`)};
+   b.onclick=e=>{e.stopPropagation();state.selectedCrop=k;farmAutoMode=true;farmHarvestMode=false;renderFarmSide();$('#farmSideHint').textContent=`${v.name}を選択中。空き畑をなぞると連続で植えられます。`;toast(`${v.name}を選択しました`)};
    box.appendChild(b)
  })
 }
 function openFarmSide(key){
- farmTappedKey=key;
+ farmTappedKey=key;farmSideOpen=true;farmAutoMode=false;farmHarvestMode=false;
+ $('#farmSide').style.display='block';renderFarmSide();
  const f=state.placed[key];
- farmSideOpen=true;
- if(farmReady(f)){
-   $('#farmSide').style.display='none';
-   $('#farmSickle').style.display='block';
-   farmAutoMode=false;
-   farmHarvestMode=false;
- }else{
-   $('#farmSickle').style.display='none';
-   $('#farmSide').style.display='block';
-   renderFarmSide();
- }
+ $('#farmSideHint').textContent=farmReady(f)?'収穫可能です。鎌を選ぶとまとめて収穫できます。':'作物を選ぶと、畑をなぞって連続で植えられます。';
 }
 function closeFarmSide(){
- farmSideOpen=false;farmAutoMode=false;farmHarvestMode=false;farmTappedKey=null;finishFarmGesture(false);$('#farmSickle').style.outline='none';
- $('#farmSide').style.display='none';$('#farmSickle').style.display='none'
+ farmSideOpen=false;farmAutoMode=false;farmHarvestMode=false;farmTappedKey=null;finishFarmGesture(false);
+ $('#farmSide').style.display='none'
 }
 function finishFarmGesture(commit=true){
  if(!farmGestureActive&&farmGesturePointerId===null){controls.enabled=true;return}
@@ -325,6 +326,9 @@ function finishFarmGesture(commit=true){
  farmGestureActive=false;farmGesturePointerId=null;farmGestureTouched.clear();controls.enabled=true;
  try{if(pid!==null&&renderer.domElement.hasPointerCapture?.(pid))renderer.domElement.releasePointerCapture(pid)}catch{}
  if(commit){renderAll();save(true)}
+}
+function finishHarvestSelection(){
+ if(farmHarvestMode){farmHarvestMode=false;farmAutoMode=false;farmTappedKey=null;$('#farmSide').style.display='none'}
 }
 function applyFarmAuto(key){
  if(!key||farmGestureTouched.has(key))return false;
@@ -335,13 +339,7 @@ function applyFarmAuto(key){
  return false
 }
 $('#farmSideClose').onclick=e=>{e.stopPropagation();closeFarmSide();toast('畑操作を終了しました')};
-$('#farmSickle').onclick=e=>{
- e.stopPropagation();
- farmHarvestMode=true;farmAutoMode=false;
- $('#farmSickle').style.display='block';
- $('#farmSickle').style.outline='2px solid #ffd56a';
- toast('収穫モード：完成した畑をなぞってください');
-};
+
 $('#farmSide').addEventListener('pointerdown',e=>e.stopPropagation());$('#farmSide').addEventListener('pointermove',e=>e.stopPropagation());
 renderer.domElement.addEventListener('pointerdown',e=>{
  pressStart={x:e.clientX,y:e.clientY,t:performance.now()};
@@ -379,7 +377,10 @@ renderer.domElement.addEventListener('pointerup',e=>{
  clearTimeout(pressTimer);pressTimer=null;
  if(farmGestureActive&&e.pointerId===farmGesturePointerId){
    const key=farmKeyFromEvent(e);if(key)applyFarmAuto(key);
-   finishFarmGesture(true);toast(farmHarvestMode?'まとめて収穫しました':'まとめて植えました');return
+   const wasHarvest=farmHarvestMode;finishFarmGesture(true);
+   if(wasHarvest){farmHarvestMode=false;farmAutoMode=false;farmTappedKey=null;$('#farmSide').style.display='none';toast('まとめて収穫しました')}
+   else toast('まとめて植えました');
+   return
  }
  if(moving)return finishMove(e);
  if(!state.buildMode||openPanel)return;
@@ -392,13 +393,13 @@ renderer.domElement.addEventListener('pointerup',e=>{
 });
 renderer.domElement.addEventListener('pointercancel',e=>{
  clearTimeout(pressTimer);pressTimer=null;
- if(farmGestureActive){finishFarmGesture(true);return}
+ if(farmGestureActive){const h=farmHarvestMode;finishFarmGesture(true);if(h)finishHarvestSelection();return}
  if(moving)finishMove(e)
 });
-window.addEventListener('pointerup',e=>{if(farmGestureActive&&e.pointerId===farmGesturePointerId)finishFarmGesture(true)},{capture:true});
-window.addEventListener('pointercancel',e=>{if(farmGestureActive&&e.pointerId===farmGesturePointerId)finishFarmGesture(true)},{capture:true});
-window.addEventListener('blur',()=>{if(farmGestureActive)finishFarmGesture(true)});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&farmGestureActive)finishFarmGesture(true)});
+window.addEventListener('pointerup',e=>{if(farmGestureActive&&e.pointerId===farmGesturePointerId){const h=farmHarvestMode;finishFarmGesture(true);if(h)finishHarvestSelection()}},{capture:true});
+window.addEventListener('pointercancel',e=>{if(farmGestureActive&&e.pointerId===farmGesturePointerId){const h=farmHarvestMode;finishFarmGesture(true);if(h)finishHarvestSelection()}},{capture:true});
+window.addEventListener('blur',()=>{if(farmGestureActive){const h=farmHarvestMode;finishFarmGesture(true);if(h)finishHarvestSelection()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&farmGestureActive){const h=farmHarvestMode;finishFarmGesture(true);if(h)finishHarvestSelection()}});
 
 function renderFoods(){const el=$('#foodGrid');el.innerHTML='';Object.entries(FOOD).forEach(([k,v])=>{const b=document.createElement('button');b.className='tile'+(state.selectedFood===k?' active':'');b.innerHTML=`<span class="emo">${v.emoji}</span>${v.name}<br><span class="cnt">×${state.foods[k]||0}</span>`;b.onclick=()=>{state.selectedFood=k;renderFoods()};el.appendChild(b)})}
 function costText(cost){return Object.entries(cost).map(([k,n])=>`${FOOD[k].emoji}${n}`).join(' ')}function renderBuild(){const el=$('#buildGrid');el.innerHTML='';Object.entries(DECOR).forEach(([k,v])=>{const n=state.decorStock[k]||0,b=document.createElement('button');b.className='tile'+(state.buildKind==='decor'&&state.selectedDecor===k?' active':'')+(n<=0?' locked':'');b.innerHTML=`<span class="emo">${v.emoji}</span>${v.name}<br><span class="cnt">×${n}</span>`;b.onclick=()=>{if(n<=0)return toast('ショップで購入してください');state.buildKind='decor';state.selectedDecor=k;renderBuild()};el.appendChild(b)});const lg=$('#landBuildGrid');if(lg){lg.innerHTML='';Object.entries(ATTR).forEach(([attr,a])=>{const b=document.createElement('button');b.className='tile'+(state.buildKind==='land'&&state.selectedLandAttr===attr?' active':'');b.innerHTML=`<span class="emo">${a.emoji}</span>${a.name}ランド<br><span class="cnt">${costText(LAND_COSTS[attr])}</span>`;b.onclick=()=>{state.buildKind='land';state.selectedLandAttr=attr;renderBuild()};lg.appendChild(b)})}$('#terrainBuildCount').textContent=state.terrainStock||0;$('#terrainBuild').classList.toggle('active',state.buildKind==='terrain');$('#terrainBuild').onclick=()=>{if(state.terrainStock<=0)return toast('ランド画面で拡張パーツ×2を土地に交換してください');state.buildKind='terrain';renderBuild()};$('#buildBadge').classList.toggle('show',state.buildMode);$('#buildOn').classList.toggle('active',state.buildMode);$('#buildOff').classList.toggle('active',!state.buildMode);const sel=state.selectedPlacedKey&&state.placed[state.selectedPlacedKey];const ri=$('#rotateInfo');const rb=$('#rotateBtn');if(ri)ri.textContent=sel?`選択中：${DECOR[sel.type]?.name||sel.type}（${((sel.rotation||0)*90)%360}°）`:'建築モード中に設置済みの装飾をタップして選択';if(rb)rb.disabled=!sel}
