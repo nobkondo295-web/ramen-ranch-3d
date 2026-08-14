@@ -33,6 +33,7 @@ main{position:relative;min-height:0;overflow:hidden}#world{position:absolute;ins
 <section class="panel" id="panel-menu"><button class="close">×</button><h2>⚙️ メニュー</h2><div class="lead">時間帯とセーブを管理します。</div><div class="section"><h3>時間帯</h3><div class="toggle"><button class="seg" data-time="day">☀️ 昼</button><button class="seg" data-time="sunset">🌇 夕方</button><button class="seg" data-time="night">🌙 夜</button></div></div><div class="section"><div class="row"><button class="btn good" id="saveBtn">今すぐ保存</button><button class="btn alt" id="resetCam">視点リセット</button></div><div class="hint" id="saveInfo" style="text-align:center;margin-top:7px">自動セーブ有効</div></div><div class="section"><button class="btn danger" id="resetBtn">牧場データを初期化</button></div></section>
 <nav class="bottomnav"><button class="navbtn" data-open="scan"><span>📷</span>スキャン</button><button class="navbtn" data-open="grow"><span>🍥</span>育成</button><button class="navbtn" data-open="island"><span>🏝️</span>ランド</button><button class="navbtn" data-open="build"><span>🧱</span>建築</button><button class="navbtn" data-open="menu"><span>⚙️</span>設定</button></nav>
 <div class="toast" id="toast"></div><div class="flash" id="flash"></div>
+<button id="farmSickle" title="まとめて収穫" style="position:absolute;right:14px;top:92px;z-index:36;width:48px;height:48px;display:none;border:1px solid #ffffff33;border-radius:14px;background:#171b16ee;color:#fff;font-size:25px;box-shadow:0 8px 24px #0007;backdrop-filter:blur(10px)"><span style="font-size:23px">⚒️</span></button>
 <div id="farmSide" style="position:absolute;right:10px;top:84px;z-index:35;width:108px;display:none;background:#171b16ee;border:1px solid #ffffff22;border-radius:16px;padding:8px;backdrop-filter:blur(12px);box-shadow:0 10px 30px #0007">
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><b style="font-size:10px">🌱 作物</b><button id="farmSideClose" style="border:0;background:#ffffff12;color:#fff;border-radius:9px;width:25px;height:25px">×</button></div>
 <div id="farmSideCrops" style="display:flex;flex-direction:column;gap:6px;max-height:58vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
@@ -267,7 +268,7 @@ function finishMove(e){if(!moving)return;const c=cellFromEvent(e);let ok=false;i
 function placeAt(x,z){const key=cellKey(x,z);if(state.buildOp==='remove'){if(state.placed[key]){const type=state.placed[key].type;scene.remove(buildMeshes[key]);delete buildMeshes[key];delete state.placed[key];state.decorStock[type]=(state.decorStock[type]||0)+1;if(type==='pond')rebuildPonds();if(type==='whitefence')rebuildFences();if(state.selectedPlacedKey===key)state.selectedPlacedKey=null;return toast('撤去して所持品に戻しました')}const l=state.lands.find(v=>landCells(v).some(([lx,lz])=>lx===x&&lz===z));if(l){if(landCount(l)>0)return toast('仲間が住んでいるランドは撤去できません');const idx=state.lands.indexOf(l);state.lands.splice(idx,1);drawLands();return toast('ランドを撤去しました')}return toast('撤去するものがありません')}if(state.buildKind==='terrain'){if(state.terrainStock<=0)return toast('土地を持っていません');if(hasTerrainCell(x,z))return toast('すでに土地があります');if(!adjacentToLand(x,z))return toast('土地は既存の島・拡張地に上下左右で隣接している場所だけ設置できます');state.terrainPlaced[key]=true;state.terrainStock--;redrawTerrain();state.stats.expands++;const extent=Math.max(Math.abs(x),Math.abs(z));controls.maxDistance=100000;return toast('土地を拡張しました。本島と一体化しました')}if(state.buildKind==='land'){const attr=state.selectedLandAttr,cost=LAND_COSTS[attr],dummy={level:1,...LAND_SPECS[1]};if(!landFits(dummy,x,z,null))return toast('ランドを置ける空き土地がありません');for(const [k,n] of Object.entries(cost))if((state.foods[k]||0)<n)return toast(`${FOOD[k].name}があと${n-(state.foods[k]||0)}個必要です`);for(const [k,n] of Object.entries(cost))state.foods[k]-=n;const spec=LAND_SPECS[1],id=`${attr}-${Date.now()}-${Math.floor(Math.random()*999)}`,l={id,attr,name:`${ATTR[attr].name}のランド`,level:1,...spec,gridX:x,gridZ:z,x:x+spec.w/2,z:z+spec.h/2,placed:true};state.lands.push(l);drawLands();return toast(`${ATTR[attr].name}ランドを建築しました`)}if(!state.selectedDecor)return toast('装飾を選んでください');if(!(state.decorStock[state.selectedDecor]>0))return toast('その装飾を持っていません');if(!canPlaceObject(x,z))return toast('このマスには設置できません');state.placed[key]={type:state.selectedDecor,rotation:0,...(state.selectedDecor==='farmplot'?{crop:null,plantedAt:0}:{})};state.decorStock[state.selectedDecor]--;buildMeshes[key]=buildMesh(state.selectedDecor,x,z,key);state.stats.builds++;if(state.selectedDecor==='pond')rebuildPonds();if(state.selectedDecor==='whitefence')rebuildFences();if(state.selectedDecor==='farmplot')updateFarmVisual(key);toast(`${DECOR[state.selectedDecor].name}を設置`)}
 
 
-let farmSideOpen=false,farmAutoMode=false,farmGestureActive=false,farmGesturePointerId=null,farmGestureWatchdog=null,farmGestureTouched=new Set();
+let farmSideOpen=false,farmAutoMode=false,farmHarvestMode=false,farmTappedKey=null,farmGestureActive=false,farmGesturePointerId=null,farmGestureWatchdog=null,farmGestureTouched=new Set();
 function farmKeyFromEvent(e){
  setRay(e);
  const hits=ray.intersectObjects(Object.values(buildMeshes),true);
@@ -294,15 +295,28 @@ function renderFarmSide(){
    const b=document.createElement('button');
    b.className='farmsidecrop'+(state.selectedCrop===k&&farmAutoMode?' active':'');
    b.innerHTML=`<span class="emo">${v.emoji}</span>${v.name}<br><small>${v.sec}秒</small>`;
-   b.onclick=e=>{e.stopPropagation();state.selectedCrop=k;farmAutoMode=true;renderFarmSide();$('#farmSideHint').textContent=`${v.name}を選択中。空き畑をなぞると植え、完成した畑をなぞると自動収穫します。`;toast(`${v.name}を選択しました`)};
+   b.onclick=e=>{e.stopPropagation();state.selectedCrop=k;farmAutoMode=true;farmHarvestMode=false;$('#farmSickle').style.display='none';renderFarmSide();$('#farmSideHint').textContent=`${v.name}を選択中。空き畑をなぞると連続で植えられます。`;toast(`${v.name}を選択しました`)};
    box.appendChild(b)
  })
 }
-function openFarmSide(){
- farmSideOpen=true;$('#farmSide').style.display='block';renderFarmSide();
+function openFarmSide(key){
+ farmTappedKey=key;
+ const f=state.placed[key];
+ farmSideOpen=true;
+ if(farmReady(f)){
+   $('#farmSide').style.display='none';
+   $('#farmSickle').style.display='block';
+   farmAutoMode=false;
+   farmHarvestMode=false;
+ }else{
+   $('#farmSickle').style.display='none';
+   $('#farmSide').style.display='block';
+   renderFarmSide();
+ }
 }
 function closeFarmSide(){
- farmSideOpen=false;farmAutoMode=false;finishFarmGesture(false);$('#farmSide').style.display='none'
+ farmSideOpen=false;farmAutoMode=false;farmHarvestMode=false;farmTappedKey=null;finishFarmGesture(false);$('#farmSickle').style.outline='none';
+ $('#farmSide').style.display='none';$('#farmSickle').style.display='none'
 }
 function finishFarmGesture(commit=true){
  if(!farmGestureActive&&farmGesturePointerId===null){controls.enabled=true;return}
@@ -316,11 +330,18 @@ function applyFarmAuto(key){
  if(!key||farmGestureTouched.has(key))return false;
  farmGestureTouched.add(key);
  const f=state.placed[key];if(!f||f.type!=='farmplot')return false;
- if(farmReady(f))return harvestFarmKey(key);
- if(!f.crop&&farmAutoMode)return plantFarmKey(key,state.selectedCrop);
+ if(farmHarvestMode&&farmReady(f))return harvestFarmKey(key);
+ if(farmAutoMode&&!f.crop)return plantFarmKey(key,state.selectedCrop);
  return false
 }
 $('#farmSideClose').onclick=e=>{e.stopPropagation();closeFarmSide();toast('畑操作を終了しました')};
+$('#farmSickle').onclick=e=>{
+ e.stopPropagation();
+ farmHarvestMode=true;farmAutoMode=false;
+ $('#farmSickle').style.display='block';
+ $('#farmSickle').style.outline='2px solid #ffd56a';
+ toast('収穫モード：完成した畑をなぞってください');
+};
 $('#farmSide').addEventListener('pointerdown',e=>e.stopPropagation());$('#farmSide').addEventListener('pointermove',e=>e.stopPropagation());
 renderer.domElement.addEventListener('pointerdown',e=>{
  pressStart={x:e.clientX,y:e.clientY,t:performance.now()};
@@ -328,7 +349,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{
    if(openPanel)return;
    const fk=farmKeyFromEvent(e);
    // Camera rotation remains available unless a swipe starts directly on a farm while a crop is selected.
-   if(fk&&farmAutoMode){
+   if(fk&&(farmAutoMode||farmHarvestMode)){
      farmGestureActive=true;farmGesturePointerId=e.pointerId;farmGestureTouched.clear();controls.enabled=false;
      try{renderer.domElement.setPointerCapture?.(e.pointerId)}catch{}
      clearTimeout(farmGestureWatchdog);farmGestureWatchdog=setTimeout(()=>{if(farmGestureActive)finishFarmGesture(true)},3000);
@@ -337,7 +358,7 @@ renderer.domElement.addEventListener('pointerdown',e=>{
    setRay(e);
    const meshes=state.creatures.map(c=>c.mesh).filter(Boolean),hit=ray.intersectObjects(meshes,true)[0];
    if(hit){const o=ancestorData(hit.object,'creatureId'),c=state.creatures.find(x=>x.id===o?.userData.creatureId);if(c){showCreatureDetail(c);return}}
-   if(fk){openFarmSide();return}
+   if(fk){openFarmSide(fk);return}
    const landHit=ray.intersectObjects(landVisuals,true)[0];
    if(landHit){const lo=ancestorData(landHit.object,'landId'),l=state.lands.find(x=>x.id===lo?.userData.landId);if(l){collectLandRewards(l);return}}
    return
@@ -358,7 +379,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
  clearTimeout(pressTimer);pressTimer=null;
  if(farmGestureActive&&e.pointerId===farmGesturePointerId){
    const key=farmKeyFromEvent(e);if(key)applyFarmAuto(key);
-   finishFarmGesture(true);toast('畑をまとめて操作しました');return
+   finishFarmGesture(true);toast(farmHarvestMode?'まとめて収穫しました':'まとめて植えました');return
  }
  if(moving)return finishMove(e);
  if(!state.buildMode||openPanel)return;
