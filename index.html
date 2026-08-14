@@ -125,7 +125,7 @@ function buildUnifiedIsland(){
  drawLands()
 }
 function terrainMesh(x,z){return null}
-function redrawTerrain(){buildUnifiedIsland()}
+function redrawTerrain(){buildUnifiedIsland();if(typeof rebuildPonds==='function')rebuildPonds()}
 function makeIsland(){buildUnifiedIsland()}
 function rebuildLandState(reassign=false){state.lands=(state.lands||[]).map(l=>{const level=clamp(Number(l.level||1),1,3),spec=LAND_SPECS[level];return {...l,level,...spec,placed:true}});if(reassign)state.creatures.forEach(c=>{const l=state.lands.find(x=>x.attr===c.attr&&landCount(x)<x.cap);if(l)c.landId=l.id})}
 function landDecor(l,g){const a=ATTR[l.attr],mat=new THREE.MeshStandardMaterial({color:a.color,roughness:.9});if(l.attr==='fire'){for(const x of[-.65,.65]){const m=new THREE.Mesh(new THREE.ConeGeometry(.16,.5,8),new THREE.MeshStandardMaterial({color:0xff8a2d,emissive:0xff4b16,emissiveIntensity:.7}));m.position.set(x,.48,0);g.add(m)}}else if(l.attr==='forest'){for(const x of[-.7,.7]){const t=new THREE.Mesh(new THREE.ConeGeometry(.35,.8,8),mat);t.position.set(x,.62,0);g.add(t)}}else if(l.attr==='water'){const p=new THREE.Mesh(new THREE.CircleGeometry(.55,20),new THREE.MeshStandardMaterial({color:0x4bbde4,roughness:.2}));p.rotation.x=-Math.PI/2;p.position.y=.28;g.add(p)}else if(l.attr==='light'){const c=new THREE.Mesh(new THREE.OctahedronGeometry(.38),new THREE.MeshStandardMaterial({color:0xffe996,emissive:0xffd55c,emissiveIntensity:.5}));c.position.y=.68;g.add(c)}else if(l.attr==='dark'){const c=new THREE.Mesh(new THREE.TorusGeometry(.38,.1,8,18,Math.PI*1.3),new THREE.MeshStandardMaterial({color:0x655080,emissive:0x281d40,emissiveIntensity:.4}));c.position.y=.7;c.rotation.z=.5;g.add(c)}else{for(const x of[-.55,.55]){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.28),mat);r.position.set(x,.42,0);g.add(r)}}}
@@ -214,20 +214,53 @@ function buildMesh(type,x,z,key=null){
  }else if(type==='bench'){
   const m=new THREE.MeshStandardMaterial({color:0x8b5c37});add(new THREE.BoxGeometry(1.1,.14,.4),m,0,.46,0);add(new THREE.BoxGeometry(.12,.45,.12),m,-.4,.22,0);add(new THREE.BoxGeometry(.12,.45,.12),m,.4,.22,0)
  }else if(type==='pond'){
-  // Dug pond: green ground lip at terrain height, exposed brown soil slopes down to lower water.
-  const grass=new THREE.MeshStandardMaterial({color:0x658f50,roughness:.92});const soil=new THREE.MeshStandardMaterial({color:0x765238,roughness:1});const mud=new THREE.MeshStandardMaterial({color:0x4f3a2b,roughness:1});const waterMatP=new THREE.MeshStandardMaterial({color:0x2b9fc3,roughness:.12,metalness:.04,transparent:true,opacity:.91});
+  // Pond renderer for the unified-island terrain.
+  // Do not rely on stencil holes: the visual basin sits just above the terrain,
+  // while raised banks make the water read as recessed into the island.
+  const grass=new THREE.MeshStandardMaterial({color:0x658f50,roughness:.94});
+  const soil=new THREE.MeshStandardMaterial({color:0x765238,roughness:1});
+  const mud=new THREE.MeshStandardMaterial({color:0x4a3427,roughness:1});
+  const waterMatP=new THREE.MeshPhysicalMaterial({
+    color:0x238fb8,roughness:.08,metalness:.02,transparent:true,opacity:.96,
+    clearcoat:.55,clearcoatRoughness:.12,side:THREE.DoubleSide
+  });
   const neighbors={n:pondAt(x,z-1),s:pondAt(x,z+1),w:pondAt(x-1,z),e:pondAt(x+1,z)};
-  // Stencil a real opening into the island surface so the lower water is actually visible.
-  const maskMat=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false,stencilWrite:true,stencilRef:1,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp});
-  const mask=new THREE.Mesh(new THREE.PlaneGeometry(.80,.80),maskMat);mask.rotation.x=-Math.PI/2;mask.position.y=.14;mask.renderOrder=-20;g.add(mask);
-  if(neighbors.n){const q=new THREE.Mesh(new THREE.PlaneGeometry(.64,.24),maskMat.clone());q.rotation.x=-Math.PI/2;q.position.set(0,.14,-.42);q.renderOrder=-20;g.add(q)}if(neighbors.s){const q=new THREE.Mesh(new THREE.PlaneGeometry(.64,.24),maskMat.clone());q.rotation.x=-Math.PI/2;q.position.set(0,.14,.42);q.renderOrder=-20;g.add(q)}if(neighbors.w){const q=new THREE.Mesh(new THREE.PlaneGeometry(.24,.64),maskMat.clone());q.rotation.x=-Math.PI/2;q.position.set(-.42,.14,0);q.renderOrder=-20;g.add(q)}if(neighbors.e){const q=new THREE.Mesh(new THREE.PlaneGeometry(.24,.64),maskMat.clone());q.rotation.x=-Math.PI/2;q.position.set(.42,.14,0);q.renderOrder=-20;g.add(q)}
-  // basin floor + water are below the island surface
-  add(new THREE.BoxGeometry(.96,.035,.96),mud,0,-.205,0);add(new THREE.BoxGeometry(.72,.025,.72),waterMatP,0,-.135,0);
-  const bank=(side)=>{if(side==='n'){const m=add(new THREE.BoxGeometry(.98,.12,.18),soil,0,-.075,-.405);m.rotation.x=-.28;add(new THREE.BoxGeometry(.98,.025,.10),grass,0,.025,-.455)}if(side==='s'){const m=add(new THREE.BoxGeometry(.98,.12,.18),soil,0,-.075,.405);m.rotation.x=.28;add(new THREE.BoxGeometry(.98,.025,.10),grass,0,.025,.455)}if(side==='w'){const m=add(new THREE.BoxGeometry(.18,.12,.78),soil,-.405,-.075,0);m.rotation.z=.28;add(new THREE.BoxGeometry(.10,.025,.78),grass,-.455,.025,0)}if(side==='e'){const m=add(new THREE.BoxGeometry(.18,.12,.78),soil,.405,-.075,0);m.rotation.z=-.28;add(new THREE.BoxGeometry(.10,.025,.78),grass,.455,.025,0)}};
-  if(!neighbors.n)bank('n');else add(new THREE.BoxGeometry(.72,.025,.34),waterMatP,0,-.135,-.37);
-  if(!neighbors.s)bank('s');else add(new THREE.BoxGeometry(.72,.025,.34),waterMatP,0,-.135,.37);
-  if(!neighbors.w)bank('w');else add(new THREE.BoxGeometry(.34,.025,.72),waterMatP,-.37,-.135,0);
-  if(!neighbors.e)bank('e');else add(new THREE.BoxGeometry(.34,.025,.72),waterMatP,.37,-.135,0);
+
+  // Dark basin floor masks the grass beneath and guarantees the pond is visible.
+  add(new THREE.BoxGeometry(.94,.035,.94),mud,0,.065,0);
+
+  // Water is lower than the surrounding raised bank.
+  add(new THREE.BoxGeometry(.72,.028,.72),waterMatP,0,.105,0);
+
+  const bank=(side)=>{
+    if(side==='n'){
+      const m=add(new THREE.BoxGeometry(.98,.18,.20),soil,0,.17,-.405);m.rotation.x=-.22;
+      add(new THREE.BoxGeometry(.98,.035,.10),grass,0,.275,-.455)
+    }
+    if(side==='s'){
+      const m=add(new THREE.BoxGeometry(.98,.18,.20),soil,0,.17,.405);m.rotation.x=.22;
+      add(new THREE.BoxGeometry(.98,.035,.10),grass,0,.275,.455)
+    }
+    if(side==='w'){
+      const m=add(new THREE.BoxGeometry(.20,.18,.78),soil,-.405,.17,0);m.rotation.z=.22;
+      add(new THREE.BoxGeometry(.10,.035,.78),grass,-.455,.275,0)
+    }
+    if(side==='e'){
+      const m=add(new THREE.BoxGeometry(.20,.18,.78),soil,.405,.17,0);m.rotation.z=-.22;
+      add(new THREE.BoxGeometry(.10,.035,.78),grass,.455,.275,0)
+    }
+  };
+
+  if(!neighbors.n)bank('n');else add(new THREE.BoxGeometry(.72,.028,.38),waterMatP,0,.105,-.38);
+  if(!neighbors.s)bank('s');else add(new THREE.BoxGeometry(.72,.028,.38),waterMatP,0,.105,.38);
+  if(!neighbors.w)bank('w');else add(new THREE.BoxGeometry(.38,.028,.72),waterMatP,-.38,.105,0);
+  if(!neighbors.e)bank('e');else add(new THREE.BoxGeometry(.38,.028,.72),waterMatP,.38,.105,0);
+
+  // Slight inner soil lip strengthens the "dug into the island" appearance.
+  if(!neighbors.n)add(new THREE.BoxGeometry(.74,.045,.07),soil,0,.135,-.335);
+  if(!neighbors.s)add(new THREE.BoxGeometry(.74,.045,.07),soil,0,.135,.335);
+  if(!neighbors.w)add(new THREE.BoxGeometry(.07,.045,.74),soil,-.335,.135,0);
+  if(!neighbors.e)add(new THREE.BoxGeometry(.07,.045,.74),soil,.335,.135,0);
  }else if(type==='stall'){
   add(new THREE.BoxGeometry(1.15,.75,.8),new THREE.MeshStandardMaterial({color:0x774032}),0,.38,0);add(new THREE.BoxGeometry(1.38,.13,1.04),new THREE.MeshStandardMaterial({color:0xc74d35}),0,1.02,0)
  }else if(type==='flower'){
