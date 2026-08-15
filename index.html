@@ -57,9 +57,9 @@ const LAND_SPECS={1:{w:2,h:2,cap:2},2:{w:3,h:2,cap:4},3:{w:3,h:3,cap:6}};
 const LAND_BASE=[
 {id:'fire',attr:'fire',name:'炎のランド',x:-4.7,z:-3.2},{id:'forest',attr:'forest',name:'森のランド',x:0,z:-3.2},{id:'water',attr:'water',name:'水のランド',x:4.7,z:-3.2},
 {id:'earth',attr:'earth',name:'大地のランド',x:-4.7,z:3.0},{id:'light',attr:'light',name:'光のランド',x:0,z:3.0},{id:'dark',attr:'dark',name:'闇のランド',x:4.7,z:3.0}];
-const defaults=()=>({creatures:[],activeId:null,foods:{egg:4,nori:4,pork:3,corn:3,negi:4,naruto:2,menma:3,butter:0,garlic:3,spice:3,shrimp:3,cheese:0},selectedFood:'egg',coins:300,expansionParts:6,terrainStock:0,terrainPlaced:{},lands:[],buildMode:false,buildOp:'place',buildKind:'decor',selectedDecor:null,selectedPlacedKey:null,selectedLandAttr:'fire',decorStock:{tree:2,rock:2,flower:1,farmplot:2,whitefence:2},placed:{},farm:[],selectedCrop:'negi',time:'day',stats:{scans:0,feeds:0,builds:0,harvests:0,expeditions:0,expands:0},questIndex:0,questBase:null,lastSave:null});
+const defaults=()=>({creatures:[],activeId:null,foods:{egg:4,nori:4,pork:3,corn:3,negi:4,naruto:2,menma:3,butter:0,garlic:3,spice:3,shrimp:3,cheese:0},selectedFood:'egg',coins:300,expansionParts:6,terrainStock:0,terrainPlaced:{},lands:[],buildMode:false,buildOp:'place',buildKind:'decor',selectedDecor:null,selectedPlacedKey:null,selectedLandAttr:'fire',decorStock:{tree:2,rock:2,flower:1,farmplot:2,whitefence:2},placed:{},farm:[],selectedCrop:'negi',time:'day',stats:{scans:0,feeds:0,builds:0,harvests:0,expeditions:0,expands:0},questIndex:0,questSlots:null,lastSave:null});
 let state=defaults(), currentPhoto=null, openPanel=null;
-function normalize(){const hadLegacyLands=Array.isArray(state.lands)&&state.lands.length>0;state={...defaults(),...state};state.stats={...defaults().stats,...(state.stats||{})};state.questIndex=Math.max(0,Number(state.questIndex||0));state.questBase=state.questBase||null;state.decorStock={...defaults().decorStock,...(state.decorStock||{})};state.expansionParts=Number(state.expansionParts||0);state.terrainStock=Number(state.terrainStock||0);state.terrainPlaced=state.terrainPlaced||{};state.placed=state.placed||{};if(hadLegacyLands){state.lands=(state.lands||[]).map((l,i)=>{const level=clamp(Number(l.level||1),1,3),spec=LAND_SPECS[level],attr=l.attr||l.id||Object.keys(ATTR)[i%6],x=Number(l.x??LAND_BASE[i%LAND_BASE.length]?.x??0),z=Number(l.z??LAND_BASE[i%LAND_BASE.length]?.z??0);return {...l,id:l.id||attr,attr,name:(l.name==='潮のランド'?'水のランド':(l.name||`${ATTR[attr].name}のランド`)),level,...spec,x,z,gridX:Number.isFinite(l.gridX)?l.gridX:Math.floor(x-spec.w/2),gridZ:Number.isFinite(l.gridZ)?l.gridZ:Math.floor(z-spec.h/2),placed:true,storedCoins:Number(l.storedCoins||0),storedFoods:l.storedFoods||{},lastCoinAt:Number(l.lastCoinAt||Date.now()),lastToppingAt:Number(l.lastToppingAt||Date.now())}})}else state.lands=[];state.creatures=(state.creatures||[]).map((c,i)=>{const attr=c.attr||['fire','forest','water','earth','light','dark'][i%6];let landId=c.landId;const match=state.lands.find(l=>l.id===landId)||state.lands.find(l=>l.attr===attr);if(match)landId=match.id;return {...c,level:clamp(Number(c.level||1),1,20),xp:Number(c.xp||0),friend:0,attr,landId:landId||null,scannedAt:c.scannedAt||Date.now(),photoData:c.photoData||'',archetype:c.archetype||['cat','fox','bird','dragon','slime','beast'][i%6],variant:c.variant??i%12,rarity:c.rarity||'N',stats:c.stats||{power:50,speed:50,luck:50,charm:50},type:(c.type||'').replace(/^潮・/,'水・')}});for(const [k,v] of Object.entries(state.placed)){v.rotation=Number(v.rotation||0)%4;if(v.type==='farmplot'){v.crop=v.crop||null;v.plantedAt=v.plantedAt||0}}}
+function normalize(){const hadLegacyLands=Array.isArray(state.lands)&&state.lands.length>0;state={...defaults(),...state};state.stats={...defaults().stats,...(state.stats||{})};state.questIndex=Math.max(0,Number(state.questIndex||0));state.questSlots=Array.isArray(state.questSlots)?state.questSlots:null;state.decorStock={...defaults().decorStock,...(state.decorStock||{})};state.expansionParts=Number(state.expansionParts||0);state.terrainStock=Number(state.terrainStock||0);state.terrainPlaced=state.terrainPlaced||{};state.placed=state.placed||{};if(hadLegacyLands){state.lands=(state.lands||[]).map((l,i)=>{const level=clamp(Number(l.level||1),1,3),spec=LAND_SPECS[level],attr=l.attr||l.id||Object.keys(ATTR)[i%6],x=Number(l.x??LAND_BASE[i%LAND_BASE.length]?.x??0),z=Number(l.z??LAND_BASE[i%LAND_BASE.length]?.z??0);return {...l,id:l.id||attr,attr,name:(l.name==='潮のランド'?'水のランド':(l.name||`${ATTR[attr].name}のランド`)),level,...spec,x,z,gridX:Number.isFinite(l.gridX)?l.gridX:Math.floor(x-spec.w/2),gridZ:Number.isFinite(l.gridZ)?l.gridZ:Math.floor(z-spec.h/2),placed:true,storedCoins:Number(l.storedCoins||0),storedFoods:l.storedFoods||{},lastCoinAt:Number(l.lastCoinAt||Date.now()),lastToppingAt:Number(l.lastToppingAt||Date.now())}})}else state.lands=[];state.creatures=(state.creatures||[]).map((c,i)=>{const attr=c.attr||['fire','forest','water','earth','light','dark'][i%6];let landId=c.landId;const match=state.lands.find(l=>l.id===landId)||state.lands.find(l=>l.attr===attr);if(match)landId=match.id;return {...c,level:clamp(Number(c.level||1),1,20),xp:Number(c.xp||0),friend:0,attr,landId:landId||null,scannedAt:c.scannedAt||Date.now(),photoData:c.photoData||'',archetype:c.archetype||['cat','fox','bird','dragon','slime','beast'][i%6],variant:c.variant??i%12,rarity:c.rarity||'N',stats:c.stats||{power:50,speed:50,luck:50,charm:50},type:(c.type||'').replace(/^潮・/,'水・')}});for(const [k,v] of Object.entries(state.placed)){v.rotation=Number(v.rotation||0)%4;if(v.type==='farmplot'){v.crop=v.crop||null;v.plantedAt=v.plantedAt||0}}}
 function save(auto=false){state.lastSave=Date.now();const clean={...state,creatures:state.creatures.map(c=>{const q={...c};delete q.mesh;delete q.target;delete q.nextPick;return q})};try{localStorage.setItem('ramenRanchIsland',JSON.stringify(clean));$('#saveInfo').textContent=(auto?'自動保存':'保存完了')+'・'+new Date(state.lastSave).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});if(!auto)toast('保存しました')}catch(e){console.warn('save failed',e);$('#saveInfo').textContent='保存容量が不足しています';if(!auto)toast('保存容量が不足しています')}}
 function load(){try{const n=localStorage.getItem('ramenRanchIsland');const old=localStorage.getItem('ramenRanchFull');if(n)state={...defaults(),...JSON.parse(n)};else if(old){const o=JSON.parse(old);state={...defaults(),...o,islandLevel:1,expansionParts:2,decorStock:{...defaults().decorStock},farm:defaults().farm};toastLater='旧セーブを島版へ移行しました'}}catch(e){console.warn(e)}}let toastLater='';load();normalize();
 function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),1700)}
@@ -224,30 +224,23 @@ function buildMesh(type,x,z,key=null){
  }else if(type==='pond'){
   const grass=new THREE.MeshStandardMaterial({color:0x658f50,roughness:.94});
   const soil=new THREE.MeshStandardMaterial({color:0x765238,roughness:1});
-  const mud=new THREE.MeshStandardMaterial({color:0x4a3427,roughness:1});
-  const waterMatP=new THREE.MeshPhysicalMaterial({
-    color:0x238fb8,roughness:.08,metalness:.02,transparent:true,opacity:.97,
-    clearcoat:.55,clearcoatRoughness:.12,side:THREE.DoubleSide
-  });
-  const neighbors={n:pondAt(x,z-1),s:pondAt(x,z+1),w:pondAt(x-1,z),e:pondAt(x+1,z)};
-  // buildMesh group is at world y=.18; island surface is about y=.22.
-  // Banks remain level with the island surface, while water sits lower.
-  add(new THREE.BoxGeometry(.94,.025,.94),mud,0,-.075,0);
-  add(new THREE.BoxGeometry(.72,.022,.72),waterMatP,0,-.035,0);
-  const bank=(side)=>{
-    if(side==='n'){const m=add(new THREE.BoxGeometry(.98,.075,.19),soil,0,-.005,-.405);m.rotation.x=-.18;add(new THREE.BoxGeometry(.98,.022,.10),grass,0,.038,-.455)}
-    if(side==='s'){const m=add(new THREE.BoxGeometry(.98,.075,.19),soil,0,-.005,.405);m.rotation.x=.18;add(new THREE.BoxGeometry(.98,.022,.10),grass,0,.038,.455)}
-    if(side==='w'){const m=add(new THREE.BoxGeometry(.19,.075,.78),soil,-.405,-.005,0);m.rotation.z=.18;add(new THREE.BoxGeometry(.10,.022,.78),grass,-.455,.038,0)}
-    if(side==='e'){const m=add(new THREE.BoxGeometry(.19,.075,.78),soil,.405,-.005,0);m.rotation.z=-.18;add(new THREE.BoxGeometry(.10,.022,.78),grass,.455,.038,0)}
+  const mud=new THREE.MeshStandardMaterial({color:0x3b2b21,roughness:1});
+  const waterMatP=new THREE.MeshPhysicalMaterial({color:0x238fb8,roughness:.08,metalness:.02,transparent:true,opacity:.98,clearcoat:.6,clearcoatRoughness:.1,side:THREE.DoubleSide});
+  const n={n:pondAt(x,z-1),s:pondAt(x,z+1),w:pondAt(x-1,z),e:pondAt(x+1,z)};
+  // Cover the grass in the pond cell, then create inward soil slopes.
+  add(new THREE.BoxGeometry(.96,.035,.96),mud,0,.035,0);
+  // Water surface is visibly lower than the island top.
+  add(new THREE.BoxGeometry(.70,.025,.70),waterMatP,0,.075,0);
+  const slope=(side)=>{
+    if(side==='n'){const m=add(new THREE.BoxGeometry(.98,.10,.18),soil,0,.115,-.405);m.rotation.x=-.28;add(new THREE.BoxGeometry(.98,.018,.075),grass,0,.045,-.468)}
+    if(side==='s'){const m=add(new THREE.BoxGeometry(.98,.10,.18),soil,0,.115,.405);m.rotation.x=.28;add(new THREE.BoxGeometry(.98,.018,.075),grass,0,.045,.468)}
+    if(side==='w'){const m=add(new THREE.BoxGeometry(.18,.10,.78),soil,-.405,.115,0);m.rotation.z=.28;add(new THREE.BoxGeometry(.075,.018,.78),grass,-.468,.045,0)}
+    if(side==='e'){const m=add(new THREE.BoxGeometry(.18,.10,.78),soil,.405,.115,0);m.rotation.z=-.28;add(new THREE.BoxGeometry(.075,.018,.78),grass,.468,.045,0)}
   };
-  if(!neighbors.n)bank('n');else add(new THREE.BoxGeometry(.72,.022,.38),waterMatP,0,-.035,-.38);
-  if(!neighbors.s)bank('s');else add(new THREE.BoxGeometry(.72,.022,.38),waterMatP,0,-.035,.38);
-  if(!neighbors.w)bank('w');else add(new THREE.BoxGeometry(.38,.022,.72),waterMatP,-.38,-.035,0);
-  if(!neighbors.e)bank('e');else add(new THREE.BoxGeometry(.38,.022,.72),waterMatP,.38,-.035,0);
-  if(!neighbors.n)add(new THREE.BoxGeometry(.74,.025,.055),soil,0,-.015,-.335);
-  if(!neighbors.s)add(new THREE.BoxGeometry(.74,.025,.055),soil,0,-.015,.335);
-  if(!neighbors.w)add(new THREE.BoxGeometry(.055,.025,.74),soil,-.335,-.015,0);
-  if(!neighbors.e)add(new THREE.BoxGeometry(.055,.025,.74),soil,.335,-.015,0);
+  if(!n.n)slope('n');else add(new THREE.BoxGeometry(.70,.025,.42),waterMatP,0,.075,-.38);
+  if(!n.s)slope('s');else add(new THREE.BoxGeometry(.70,.025,.42),waterMatP,0,.075,.38);
+  if(!n.w)slope('w');else add(new THREE.BoxGeometry(.42,.025,.70),waterMatP,-.38,.075,0);
+  if(!n.e)slope('e');else add(new THREE.BoxGeometry(.42,.025,.70),waterMatP,.38,.075,0);
  }else if(type==='stall'){
   add(new THREE.BoxGeometry(1.15,.75,.8),new THREE.MeshStandardMaterial({color:0x774032}),0,.38,0);add(new THREE.BoxGeometry(1.38,.13,1.04),new THREE.MeshStandardMaterial({color:0xc74d35}),0,1.02,0)
  }else if(type==='flower'){
@@ -436,6 +429,7 @@ document.addEventListener('pointermove',e=>{if(cropDrag)moveCropGhost(e)},{passi
 function farmEntries(){return Object.entries(state.placed).filter(([k,v])=>v.type==='farmplot')}
 function renderFarm(){const now=Date.now(),el=$('#farmGrid'),entries=farmEntries();if(!el)return;el.innerHTML='';if(!entries.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">建築モードで「畑」を1×1マスに設置してください。</div>';return}entries.forEach(([key,f],i)=>{const d=document.createElement('div');d.className='plot';d.dataset.key=key;if(!f.crop){d.innerHTML=`<div class="crop">🟫</div><b>畑 ${i+1}（${key}）</b><small>上の作物をこの畑へドラッグして植えてください</small><button disabled>👆 ドラッグで植える</button>`}else{const crop=CROPS[f.crop],p=cropProgress(f),stage=cropStage(f),left=Math.max(0,Math.ceil((f.plantedAt+crop.sec*1000-now)/1000)),ready=left<=0;const stageIcon=ready?crop.emoji:stage===0?'🌱':stage===1?'🌿':stage===2?'🪴':crop.emoji;const stageText=ready?'収穫できます！':stage===0?'発芽しました':stage===1?'葉が増えています':stage===2?'実りはじめました':'育成中';d.innerHTML=`<div class="crop">${stageIcon}</div><b>${crop.name}</b><small>${stageText} ・ ${ready?'完成':`あと ${left}秒`} ・ ${Math.round(p*100)}%</small><div class="progress" style="margin-bottom:8px"><i style="width:${Math.round(p*100)}%"></i></div><button>${ready?'🧺 収穫':'育成中…'}</button>`;d.querySelector('button').disabled=!ready;if(ready)d.querySelector('button').onclick=()=>{Object.entries(crop.yield).forEach(([k,n])=>state.foods[k]=(state.foods[k]||0)+n);rareExpansionFromToppings(Object.values(crop.yield).reduce((a,b)=>a+Number(b||0),0));state.coins+=crop.coins;f.crop=null;f.plantedAt=0;state.stats.harvests++;updateFarmVisual(key);toast(`収穫！ +${crop.coins}コイン`);renderAll();save(true)}}el.appendChild(d)})}
 
+
 const QUEST_CHAIN=[
  {name:'ラーメンから仲間を2体誕生',metric:'scans',target:2,reward:{coins:120}},
  {name:'トッピングを6回あげる',metric:'feeds',target:6,reward:{coins:150}},
@@ -446,42 +440,41 @@ const QUEST_CHAIN=[
  {name:'トッピングを10回あげる',metric:'feeds',target:10,reward:{foods:3}},
  {name:'畑で5回収穫する',metric:'harvests',target:5,reward:{coins:320}}
 ];
-function currentQuest(){
- const q=QUEST_CHAIN[state.questIndex%QUEST_CHAIN.length];
- if(!state.questBase||state.questBase.metric!==q.metric)state.questBase={metric:q.metric,value:Number(state.stats[q.metric]||0)};
- return q
+function makeQuestSlot(offset=0){
+ const idx=(state.questIndex+offset)%QUEST_CHAIN.length,q=QUEST_CHAIN[idx];
+ return {idx,base:Number(state.stats[q.metric]||0)}
 }
-function questProgress(q){
- const base=state.questBase?.metric===q.metric?Number(state.questBase.value||0):0;
- return Math.max(0,Number(state.stats[q.metric]||0)-base)
-}
-function questRewardText(r){
- const a=[];if(r.coins)a.push(`🪙${r.coins}`);if(r.foods)a.push(`🍥${r.foods}`);return a.join(' / ')
-}
-function grantQuestReward(q){
- if(q.reward.coins)state.coins+=q.reward.coins;
- if(q.reward.foods){
-   const keys=Object.keys(FOOD);
-   for(let i=0;i<q.reward.foods;i++){const k=keys[Math.floor(Math.random()*keys.length)];state.foods[k]=(state.foods[k]||0)+1}
-   rareExpansionFromToppings(q.reward.foods)
+function ensureQuestSlots(){
+ if(!Array.isArray(state.questSlots)||state.questSlots.length!==3){
+   state.questSlots=[makeQuestSlot(0),makeQuestSlot(1),makeQuestSlot(2)];
+   state.questIndex=(state.questIndex+3)%QUEST_CHAIN.length
  }
 }
-function advanceQuestIfComplete(){
- const q=currentQuest(),p=questProgress(q);
- if(p<q.target)return null;
- grantQuestReward(q);
- const reward=questRewardText(q.reward);
- state.questIndex++;
- state.questBase=null;
- currentQuest();
- save(true);
- return `クエストクリア！ 報酬 ${reward} を獲得`;
+function questRewardText(r){const a=[];if(r.coins)a.push(`🪙${r.coins}`);if(r.foods)a.push(`🍥${r.foods}`);return a.join(' / ')}
+function grantQuestReward(q){
+ if(q.reward.coins)state.coins+=q.reward.coins;
+ if(q.reward.foods){const keys=Object.keys(FOOD);for(let i=0;i<q.reward.foods;i++){const k=keys[Math.floor(Math.random()*keys.length)];state.foods[k]=(state.foods[k]||0)+1}rareExpansionFromToppings(q.reward.foods)}
+}
+function replaceQuestSlot(i){
+ const idx=state.questIndex%QUEST_CHAIN.length,q=QUEST_CHAIN[idx];
+ state.questSlots[i]={idx,base:Number(state.stats[q.metric]||0)};
+ state.questIndex=(state.questIndex+1)%QUEST_CHAIN.length
+}
+function advanceCompletedQuests(){
+ ensureQuestSlots();const msgs=[];
+ for(let i=0;i<3;i++){
+   const slot=state.questSlots[i],q=QUEST_CHAIN[slot.idx],p=Math.max(0,Number(state.stats[q.metric]||0)-Number(slot.base||0));
+   if(p>=q.target){grantQuestReward(q);msgs.push(`${q.name}：${questRewardText(q.reward)}`);replaceQuestSlot(i)}
+ }
+ if(msgs.length){save(true);return `クエストクリア！ ${msgs.join(' / ')}`}return null
 }
 function renderQuests(){
- const cleared=advanceQuestIfComplete();
- const q=currentQuest(),p=questProgress(q),pct=clamp(p/q.target*100,0,100);
- $('#quests').innerHTML=`<div class="quest"><b>${q.name}</b><p>${Math.min(p,q.target)} / ${q.target} ・ 報酬 ${questRewardText(q.reward)}</p><div class="progress"><i style="width:${pct}%"></i></div></div>`;
- if(cleared)setTimeout(()=>toast(cleared),40);
+ const cleared=advanceCompletedQuests();ensureQuestSlots();
+ $('#quests').innerHTML=state.questSlots.map(slot=>{
+   const q=QUEST_CHAIN[slot.idx],p=Math.max(0,Number(state.stats[q.metric]||0)-Number(slot.base||0)),pct=clamp(p/q.target*100,0,100);
+   return `<div class="quest"><b>${q.name}</b><p>${Math.min(p,q.target)} / ${q.target} ・ 報酬 ${questRewardText(q.reward)}</p><div class="progress"><i style="width:${pct}%"></i></div></div>`
+ }).join('');
+ if(cleared)setTimeout(()=>toast(cleared),40)
 }
 function renderAll(){
  accrueAllLandRewards();
