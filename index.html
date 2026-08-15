@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- DEVICE BINDING + AUTO BACKUP + 10MIN AUTO TIME CYCLE -->
 <!-- LOGIN + COMPLETE DEX + PERSISTENT DUAL SAVE UPDATE -->
 <!-- CREATURE REMAKE: fantasy farm companion style -->
 <!-- PREMIUM FARM REMAKE: graphics-only rebuild, gameplay preserved -->
@@ -7,7 +8,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#11100e" />
-<title>RAMEN RANCH 3D - LOGIN & PERSISTENT SAVE</title>
+<title>RAMEN RANCH 3D - DEVICE SAVE & AUTO TIME</title>
 <style>
 :root{--bg:#142016;--panel:#223126e8;--panel2:#314333;--ink:#fffdf2;--muted:#d1d6c5;--line:#ffffff24;--accent:#f4b74e;--accent2:#ffe18b;--good:#7ed68c;--blue:#77cae6;--danger:#ff7168;--navh:78px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0;background:#142016;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif;overflow:hidden}button,input{font:inherit}button{border:0;color:inherit;background:none}button:disabled{opacity:.45}.app{height:100%;display:grid;grid-template-rows:62px 1fr;background:#1f3824}header{z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:#0f0e0df2;border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}.brand{display:flex;align-items:center;gap:10px;font-weight:950;letter-spacing:.08em}.logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#ffb54e,#ee7426);font-size:22px;box-shadow:0 8px 24px #ff7c2c30}.brand small{display:block;color:#918674;font-size:7px;letter-spacing:.16em;margin-top:2px}.headstats{display:flex;gap:6px}.pill{border:1px solid var(--line);background:#ffffff09;padding:7px 9px;border-radius:999px;font-size:10px;font-weight:850}.pill b{color:var(--accent2)}
@@ -55,11 +56,11 @@ main{position:relative;min-height:0;overflow:hidden}#world{position:absolute;ins
  <div class="loginCard">
   <div class="loginLogo">🍜</div>
   <div class="loginTitle">RAMEN RANCH</div>
-  <div class="loginSub">あなたの牧場へログオン<br>セーブデータはこのプロフィールに保存されます。</div>
+  <div class="loginSub">あなたの牧場へログオン<br>セーブデータはこの端末とプロフィールに紐付けて保存されます。</div>
   <div class="loginField"><label>プレイヤー名 / 牧場名</label><input id="loginName" maxlength="20" autocomplete="nickname" placeholder="例：のぶの牧場"></div>
   <button class="loginBtn" id="loginBtn">牧場へログオン</button>
   <div class="loginProfiles" id="loginProfileInfo"></div>
-  <div class="loginSave">自動セーブ＋二重バックアップ対応<br>再読み込み・通常アップデート後も同じプロフィールを読み込みます。</div>
+  <div class="loginSave">端末ID連携＋自動セーブ＋自動バックアップ対応<br>再読み込み・通常アップデート後もこの端末のデータを読み込みます。</div>
  </div>
 </div>
 
@@ -69,14 +70,14 @@ main{position:relative;min-height:0;overflow:hidden}#world{position:absolute;ins
 <div id="world"></div><div class="shade"></div>
 <div class="hud">
 <section class="charcard"><div class="charline"><div class="avatar" id="avatar">🥚</div><div class="grow"><div class="name" id="charName">まだ仲間がいません</div><div class="sub" id="charType">ラーメンから誕生させよう</div><div class="level" id="levelText">Lv. 0 / 20</div></div></div><div class="bars"><div class="barrow"><span>経験値</span><div class="bar"><i id="xpBar"></i></div><b id="xpNum">0</b></div></div><div class="switcher" id="switcher"></div></section>
-<div class="weather" id="weather">☀️ 昼</div><div class="buildbadge" id="buildBadge">🧱 建築モード</div><div class="cam"><button class="fab" id="homeCam">⌂</button><button class="fab" id="dayBtn">☀️</button></div>
+<div class="weather" id="weather">☀️ 昼</div><div class="buildbadge" id="buildBadge">🧱 建築モード</div><div class="cam"><button class="fab" id="homeCam">⌂</button></div>
 </div>
 <section class="panel" id="panel-scan"><button class="close">×</button><h2>📷 ラーメンスキャン</h2><div class="lead">写真ライブラリかカメラからラーメンを選び、その特徴から仲間を誕生させます。</div><div class="preview" id="photoPreview"><div class="placeholder">🍜</div></div><div class="upload"><strong>ラーメンを選択</strong><small>iPhoneの写真ライブラリに対応。大きな写真は自動圧縮して保存します。</small><input id="ramenFile" type="file" accept="image/*,.heic,.heif" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px"><input id="cameraFile" type="file" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;left:-9999px"><div class="row"><label class="btn" for="ramenFile" style="display:block;text-align:center;cursor:pointer">写真ライブラリ</label><label class="btn alt" for="cameraFile" style="display:block;text-align:center;cursor:pointer">カメラで撮る</label></div></div><div class="section" style="margin-top:10px"><h3>仲間の名前</h3><input id="scanName" type="text" maxlength="16" placeholder="名前を入力（未入力なら自動命名）" style="width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid #66705f;background:#20251f;color:#fff;font-size:16px"></div><div style="margin-top:8px"><button class="btn good" id="analyzeBtn" disabled>この写真から誕生</button></div><div class="hint" style="margin-top:9px">画像を端末内で「ラーメンらしさ」判定した後、色・明るさ・彩度から属性・体型・装飾・レアリティ・能力を決めます。ラーメン以外と判定された画像からは誕生できません。画像は端末外へ送信しません。</div></section>
 <section class="panel" id="panel-grow"><button class="close">×</button><h2>🍥 育成</h2><div class="lead">レベル上限は20。Lv.10とLv.20で進化します。</div><div class="stats4"><div class="statbox">POWER<b id="stPower">--</b></div><div class="statbox">SPEED<b id="stSpeed">--</b></div><div class="statbox">LUCK<b id="stLuck">--</b></div><div class="statbox">CHARM<b id="stCharm">--</b></div></div><div class="section"><h3>トッピング</h3><div class="grid" id="foodGrid"></div></div><div class="section"><button class="btn" id="feedBtn">選択中をあげる</button></div><div class="card"><b>🗺️ 島外遠征</b><p>30秒後にトッピング・コイン・まれに拡張パーツを持ち帰ります。</p><button class="btn good" id="expeditionBtn">30秒遠征へ出発</button></div><div class="section"><h3>クエスト</h3><div id="quests"></div></div></section>
 <section class="panel" id="panel-island"><button class="close">×</button><h2>🏝️ 属性ランド管理</h2><div class="lead">ランドは建築モードで好きな場所に設置します。Lv.1=2×2/2体、Lv.2=3×2/4体、Lv.3=3×3/6体。ランド建築には属性ごとのトッピングが必要です。</div><div class="card"><b>島の拡張用「土地」</b><p>🧩 拡張パーツ2個で土地1マスを獲得。島に隣接して無制限に追加でき、追加した土地も建築可能です。所持：<b id="terrainCount">0</b></p><button class="btn blue" id="expandBtn">🧩×2 → 土地×1 を作る</button></div><div class="section"><h3>設置済みランド</h3><div class="landgrid" id="landGrid"></div></div><div class="section"><h3>仲間図鑑</h3><div class="dex" id="dex"></div></div></section>
 <section class="panel" id="panel-build"><button class="close">×</button><h2>🧱 建築・ショップ</h2><div class="lead">建築モードはタブを閉じても維持されます。建築モード中、設置済みオブジェクトやランドを約0.6秒長押しして、そのままドラッグすると移動できます。</div><div class="section"><div class="toggle"><button class="seg" id="buildOn">建築モード ON</button><button class="seg" id="buildOff">OFF</button></div></div><div class="section"><h3>土地を広げる</h3><div class="grid"><button class="tile" id="terrainBuild"><span class="emo">🟩</span>土地<br><span class="cnt">×<span id="terrainBuildCount">0</span></span></button></div></div><div class="section"><h3>属性ランドを建築</h3><div class="grid" id="landBuildGrid"></div></div><div class="section"><h3>所持している装飾</h3><div class="grid" id="buildGrid"></div></div><div class="section"><h3>操作</h3><div class="toggle"><button class="seg active" data-buildop="place">＋ 設置</button><button class="seg" data-buildop="remove">− 撤去</button></div></div><div class="section"><h3>装飾の回転</h3><div class="rotateinfo" id="rotateInfo">建築モード中に設置済みの装飾をタップして選択</div><button class="btn alt" id="rotateBtn">↻ 選択中の装飾を90°回転</button></div><div class="section"><h3>コインショップ</h3><div id="shopList"></div></div><div class="hint">土地の設置距離に上限はありません。ただし既存の島または拡張済み土地に上下左右で隣接している必要があります。追加土地は本島と完全に一体化し、通常の島と同じように建築できます。ランドは必要トッピングを消費して建築。撤去した装飾は所持品へ戻ります。</div></section>
-<section class="panel" id="panel-menu"><button class="close">×</button><h2>⚙️ メニュー</h2><div class="lead">時間帯とセーブを管理します。</div><div class="section"><h3>時間帯</h3><div class="toggle"><button class="seg" data-time="day">☀️ 昼</button><button class="seg" data-time="sunset">🌇 夕方</button><button class="seg" data-time="night">🌙 夜</button></div></div><div class="section"><div class="row"><button class="btn good" id="saveBtn">今すぐ保存</button><button class="btn alt" id="resetCam">視点リセット</button></div><div class="hint" id="saveInfo" style="text-align:center;margin-top:7px">自動セーブ有効</div></div>
-<div class="section"><h3>セーブデータのバックアップ</h3><div class="row"><button class="btn alt" id="exportSaveBtn">バックアップを書き出す</button><label class="btn alt" for="importSaveFile" style="display:block;text-align:center;cursor:pointer">バックアップを読み込む</label></div><input id="importSaveFile" type="file" accept=".json,application/json" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><div class="hint">端末やブラウザを変更する場合はバックアップファイルを利用できます。</div></div><div class="section"><button class="btn danger" id="resetBtn">牧場データを初期化</button></div></section>
+<section class="panel" id="panel-menu"><button class="close">×</button><h2>⚙️ メニュー</h2><div class="lead">自動時間帯とセーブ状態を確認します。</div><div class="section"><h3>時間帯</h3><div class="hint" id="autoTimeInfo">☀️ 昼 ・ 自動切替まで 10:00</div><div class="hint">時間帯は10分ごとに「昼 → 夕方 → 夜」の順で自動的に切り替わります。</div></div><div class="section"><div class="row"><button class="btn good" id="saveBtn">今すぐ保存</button><button class="btn alt" id="resetCam">視点リセット</button></div><div class="hint" id="saveInfo" style="text-align:center;margin-top:7px">自動セーブ有効</div></div>
+<div class="section"><button class="btn danger" id="resetBtn">牧場データを初期化</button></div></section>
 <nav class="bottomnav"><button class="navbtn" data-open="scan"><span>📷</span>スキャン</button><button class="navbtn" data-open="grow"><span>🍥</span>育成</button><button class="navbtn" data-open="island"><span>🏝️</span>ランド</button><button class="navbtn" data-open="build"><span>🧱</span>建築</button><button class="navbtn" data-open="menu"><span>⚙️</span>設定</button></nav>
 <div class="toast" id="toast"></div><div class="flash" id="flash"></div>
 
@@ -104,11 +105,18 @@ const LAND_BASE=[
 {id:'fire',attr:'fire',name:'炎のランド',x:-4.7,z:-3.2},{id:'forest',attr:'forest',name:'森のランド',x:0,z:-3.2},{id:'water',attr:'water',name:'水のランド',x:4.7,z:-3.2},
 {id:'earth',attr:'earth',name:'大地のランド',x:-4.7,z:3.0},{id:'light',attr:'light',name:'光のランド',x:0,z:3.0},{id:'dark',attr:'dark',name:'闇のランド',x:4.7,z:3.0}];
 
-const SAVE_SCHEMA=3;
+const SAVE_SCHEMA=4;
 const PROFILE_NAME_KEY='ramenRanchActiveProfileV1';
+const DEVICE_ID_KEY='ramenRanchDeviceIdV1';
+function createDeviceId(){
+ try{return crypto.randomUUID()}catch{return 'dev-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12)}
+}
+let deviceId=(localStorage.getItem(DEVICE_ID_KEY)||'').trim();
+if(!deviceId){deviceId=createDeviceId();localStorage.setItem(DEVICE_ID_KEY,deviceId)}
 let profileName=(localStorage.getItem(PROFILE_NAME_KEY)||'メイン牧場').trim()||'メイン牧場';
 const safeProfile=n=>(n||'メイン牧場').trim().replace(/[^\p{L}\p{N}_\-ぁ-んァ-ヶ一-龠々ー ]/gu,'').slice(0,20)||'メイン牧場';
-const saveKey=()=>`ramenRanchStableSaveV1:${safeProfile(profileName)}`;
+const saveKey=()=>`ramenRanchStableSaveV2:${deviceId}:${safeProfile(profileName)}`;
+const backupKey=i=>`ramenRanchAutoBackupV1:${deviceId}:${safeProfile(profileName)}:${i}`;
 function openSaveDB(){
  return new Promise((resolve,reject)=>{
   const req=indexedDB.open('RamenRanchPersistentDB',1);
@@ -118,24 +126,37 @@ function openSaveDB(){
 }
 async function idbPut(key,value){try{const db=await openSaveDB();await new Promise((res,rej)=>{const tx=db.transaction('saves','readwrite');tx.objectStore('saves').put(value,key);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});db.close()}catch(e){console.warn('IndexedDB save failed',e)}}
 async function idbGet(key){try{const db=await openSaveDB();const v=await new Promise((res,rej)=>{const tx=db.transaction('saves','readonly');const r=tx.objectStore('saves').get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});db.close();return v||null}catch(e){console.warn('IndexedDB load failed',e);return null}}
-const defaults=()=>({creatures:[],activeId:null,foods:{egg:4,nori:4,pork:3,corn:3,negi:4,naruto:2,menma:3,butter:0,garlic:3,spice:3,shrimp:3,cheese:0},selectedFood:'egg',coins:300,expansionParts:6,terrainStock:0,terrainPlaced:{},lands:[],buildMode:false,buildOp:'place',buildKind:'decor',selectedDecor:null,selectedPlacedKey:null,selectedLandAttr:'fire',decorStock:{tree:2,rock:2,flower:1,farmplot:2,whitefence:2},placed:{},farm:[],selectedCrop:'negi',time:'day',stats:{scans:0,feeds:0,builds:0,harvests:0,expeditions:0,expands:0},questIndex:0,questSlots:null,saveSchema:SAVE_SCHEMA,profileName:profileName,lastSave:null});
+const defaults=()=>({creatures:[],activeId:null,foods:{egg:4,nori:4,pork:3,corn:3,negi:4,naruto:2,menma:3,butter:0,garlic:3,spice:3,shrimp:3,cheese:0},selectedFood:'egg',coins:300,expansionParts:6,terrainStock:0,terrainPlaced:{},lands:[],buildMode:false,buildOp:'place',buildKind:'decor',selectedDecor:null,selectedPlacedKey:null,selectedLandAttr:'fire',decorStock:{tree:2,rock:2,flower:1,farmplot:2,whitefence:2},placed:{},farm:[],selectedCrop:'negi',time:'day',stats:{scans:0,feeds:0,builds:0,harvests:0,expeditions:0,expands:0},questIndex:0,questSlots:null,saveSchema:SAVE_SCHEMA,profileName:profileName,deviceId:deviceId,timeCycleStart:null,lastSave:null});
 let state=defaults(), currentPhoto=null, openPanel=null;
-function normalize(){const hadLegacyLands=Array.isArray(state.lands)&&state.lands.length>0;state={...defaults(),...state};state.stats={...defaults().stats,...(state.stats||{})};state.questIndex=Math.max(0,Number(state.questIndex||0));state.questSlots=Array.isArray(state.questSlots)?state.questSlots:null;state.decorStock={...defaults().decorStock,...(state.decorStock||{})};state.expansionParts=Number(state.expansionParts||0);state.terrainStock=Number(state.terrainStock||0);state.terrainPlaced=state.terrainPlaced||{};state.placed=state.placed||{};if(hadLegacyLands){state.lands=(state.lands||[]).map((l,i)=>{const level=clamp(Number(l.level||1),1,3),spec=LAND_SPECS[level],attr=l.attr||l.id||Object.keys(ATTR)[i%6],x=Number(l.x??LAND_BASE[i%LAND_BASE.length]?.x??0),z=Number(l.z??LAND_BASE[i%LAND_BASE.length]?.z??0);return {...l,id:l.id||attr,attr,name:(l.name==='潮のランド'?'水のランド':(l.name||`${ATTR[attr].name}のランド`)),level,...spec,x,z,gridX:Number.isFinite(l.gridX)?l.gridX:Math.floor(x-spec.w/2),gridZ:Number.isFinite(l.gridZ)?l.gridZ:Math.floor(z-spec.h/2),placed:true,storedCoins:Number(l.storedCoins||0),storedFoods:l.storedFoods||{},lastCoinAt:Number(l.lastCoinAt||Date.now()),lastToppingAt:Number(l.lastToppingAt||Date.now())}})}else state.lands=[];state.creatures=(state.creatures||[]).map((c,i)=>{const attr=c.attr||['fire','forest','water','earth','light','dark'][i%6];let landId=c.landId;const match=state.lands.find(l=>l.id===landId)||state.lands.find(l=>l.attr===attr);if(match)landId=match.id;return {...c,level:clamp(Number(c.level||1),1,20),xp:Number(c.xp||0),friend:0,attr,landId:landId||null,scannedAt:c.scannedAt||Date.now(),photoData:c.photoData||'',archetype:c.archetype||['cat','fox','bird','dragon','slime','beast'][i%6],variant:c.variant??i%12,rarity:c.rarity||'N',stats:c.stats||{power:50,speed:50,luck:50,charm:50},type:(c.type||'').replace(/^潮・/,'水・')}});for(const [k,v] of Object.entries(state.placed)){v.rotation=Number(v.rotation||0)%4;if(v.type==='farmplot'){v.crop=v.crop||null;v.plantedAt=v.plantedAt||0}}}
+function normalize(){const hadLegacyLands=Array.isArray(state.lands)&&state.lands.length>0;state={...defaults(),...state};state.stats={...defaults().stats,...(state.stats||{})};state.questIndex=Math.max(0,Number(state.questIndex||0));state.questSlots=Array.isArray(state.questSlots)?state.questSlots:null;state.deviceId=deviceId;state.profileName=profileName;state.timeCycleStart=Number(state.timeCycleStart||Date.now());state.decorStock={...defaults().decorStock,...(state.decorStock||{})};state.expansionParts=Number(state.expansionParts||0);state.terrainStock=Number(state.terrainStock||0);state.terrainPlaced=state.terrainPlaced||{};state.placed=state.placed||{};if(hadLegacyLands){state.lands=(state.lands||[]).map((l,i)=>{const level=clamp(Number(l.level||1),1,3),spec=LAND_SPECS[level],attr=l.attr||l.id||Object.keys(ATTR)[i%6],x=Number(l.x??LAND_BASE[i%LAND_BASE.length]?.x??0),z=Number(l.z??LAND_BASE[i%LAND_BASE.length]?.z??0);return {...l,id:l.id||attr,attr,name:(l.name==='潮のランド'?'水のランド':(l.name||`${ATTR[attr].name}のランド`)),level,...spec,x,z,gridX:Number.isFinite(l.gridX)?l.gridX:Math.floor(x-spec.w/2),gridZ:Number.isFinite(l.gridZ)?l.gridZ:Math.floor(z-spec.h/2),placed:true,storedCoins:Number(l.storedCoins||0),storedFoods:l.storedFoods||{},lastCoinAt:Number(l.lastCoinAt||Date.now()),lastToppingAt:Number(l.lastToppingAt||Date.now())}})}else state.lands=[];state.creatures=(state.creatures||[]).map((c,i)=>{const attr=c.attr||['fire','forest','water','earth','light','dark'][i%6];let landId=c.landId;const match=state.lands.find(l=>l.id===landId)||state.lands.find(l=>l.attr===attr);if(match)landId=match.id;return {...c,level:clamp(Number(c.level||1),1,20),xp:Number(c.xp||0),friend:0,attr,landId:landId||null,scannedAt:c.scannedAt||Date.now(),photoData:c.photoData||'',archetype:c.archetype||['cat','fox','bird','dragon','slime','beast'][i%6],variant:c.variant??i%12,rarity:c.rarity||'N',stats:c.stats||{power:50,speed:50,luck:50,charm:50},type:(c.type||'').replace(/^潮・/,'水・')}});for(const [k,v] of Object.entries(state.placed)){v.rotation=Number(v.rotation||0)%4;if(v.type==='farmplot'){v.crop=v.crop||null;v.plantedAt=v.plantedAt||0}}}
 
 function cleanStateForSave(){
- const clean={...state,saveSchema:SAVE_SCHEMA,profileName,creatures:state.creatures.map(c=>{const q={...c};delete q.mesh;delete q.target;delete q.nextPick;return q})};
+ const clean={...state,saveSchema:SAVE_SCHEMA,profileName,deviceId,creatures:state.creatures.map(c=>{const q={...c};delete q.mesh;delete q.target;delete q.nextPick;return q})};
  return clean
 }
 function save(auto=false){
- state.lastSave=Date.now();const clean=cleanStateForSave(),payload=JSON.stringify(clean);
+ state.lastSave=Date.now();state.deviceId=deviceId;state.profileName=profileName;
+ const clean=cleanStateForSave(),payload=JSON.stringify(clean);
  try{
+  const current=localStorage.getItem(saveKey());
+  // Rotate 3 automatic local backups before writing the newest save.
+  if(current){
+   const b1=localStorage.getItem(backupKey(1)),b2=localStorage.getItem(backupKey(2));
+   if(b2)localStorage.setItem(backupKey(3),b2);
+   if(b1)localStorage.setItem(backupKey(2),b1);
+   localStorage.setItem(backupKey(1),current)
+  }
   localStorage.setItem(saveKey(),payload);
-  // Compatibility mirror: never used as the primary key, but keeps earlier builds recoverable.
   localStorage.setItem('ramenRanchIsland',payload);
   idbPut(saveKey(),clean);
+  idbPut(backupKey(Date.now()),clean);
   const info=$('#saveInfo');if(info)info.textContent=(auto?'自動保存':'保存完了')+'・'+new Date(state.lastSave).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
   if(!auto)toast('保存しました')
- }catch(e){console.warn('save failed',e);const info=$('#saveInfo');if(info)info.textContent='保存容量が不足しています';if(!auto)toast('保存容量が不足しています')}
+ }catch(e){
+  console.warn('save failed',e);
+  const info=$('#saveInfo');if(info)info.textContent='保存容量が不足しています';
+  if(!auto)toast('保存容量が不足しています')
+ }
 }
 async function load(){
  try{
@@ -144,16 +165,25 @@ async function load(){
   if(!loaded){
    const fromDB=await idbGet(saveKey());if(fromDB)loaded=fromDB
   }
-  // Automatic migration from every earlier save-key generation.
+  // Recover from this device's automatic local backups.
   if(!loaded){
-   for(const key of['ramenRanchIsland','ramenRanchFull']){
-    const old=localStorage.getItem(key);if(old){loaded=JSON.parse(old);toastLater='以前のセーブデータを新しい固定セーブへ移行しました';break}
+   for(let i=1;i<=3;i++){
+    const b=localStorage.getItem(backupKey(i));
+    if(b){try{loaded=JSON.parse(b);toastLater='自動バックアップからセーブデータを復元しました';break}catch{}}
+   }
+  }
+  // Migrate saves created before device binding.
+  if(!loaded){
+   const oldPrefix=`ramenRanchStableSaveV1:${safeProfile(profileName)}`;
+   const candidates=[localStorage.getItem(oldPrefix),localStorage.getItem('ramenRanchIsland'),localStorage.getItem('ramenRanchFull')];
+   for(const old of candidates){
+    if(old){try{loaded=JSON.parse(old);toastLater='以前のセーブデータをこの端末へ紐付けました';break}catch{}}
    }
   }
   if(loaded){
-   state={...defaults(),...loaded,profileName};
-   // Immediately write to the stable current key, so later HTML updates keep using it.
-   const migrated={...state,saveSchema:SAVE_SCHEMA,profileName};
+   state={...defaults(),...loaded,profileName,deviceId};
+   state.timeCycleStart=Number(state.timeCycleStart||Date.now());
+   const migrated={...state,saveSchema:SAVE_SCHEMA,profileName,deviceId};
    localStorage.setItem(saveKey(),JSON.stringify(migrated));idbPut(saveKey(),migrated)
   }
  }catch(e){console.warn('load failed',e)}
@@ -270,62 +300,7 @@ function landCells(l,gx=l.gridX,gz=l.gridZ,w=l.w,h=l.h){const out=[];for(let dx=
 function landFits(l,gx,gz,ignoreId=null){const spec=LAND_SPECS[l.level||1];for(const [x,z] of landCells(l,gx,gz,spec.w,spec.h)){if(!hasTerrainCell(x,z))return false;if(state.placed[cellKey(x,z)])return false;for(const o of state.lands){if(o.id===ignoreId)continue;if(landCells(o).some(([ox,oz])=>ox===x&&oz===z))return false}}return true}
 function drawLands(){landVisuals.forEach(o=>scene.remove(o));landVisuals=[];for(const l of state.lands){updateLandPos(l);const g=new THREE.Group();g.userData.landId=l.id;const a=ATTR[l.attr],shape=roundedLandShape(l.w,l.h,(l.id||'').length+l.level*7);const pad=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.08,bevelEnabled:true,bevelThickness:.05,bevelSize:.07,bevelSegments:3}),new THREE.MeshStandardMaterial({color:a.color,transparent:true,opacity:.68,roughness:.82}));pad.rotation.x=Math.PI/2;pad.position.y=.25;pad.receiveShadow=true;g.add(pad);const inner=new THREE.Mesh(new THREE.ShapeGeometry(roundedLandShape(l.w*.92,l.h*.92,(l.id||'').length+3)),new THREE.MeshStandardMaterial({color:a.color,transparent:true,opacity:.22,side:THREE.DoubleSide}));inner.rotation.x=Math.PI/2;inner.position.y=.355;g.add(inner);landDecor(l,g);g.position.set(l.x,0,l.z);scene.add(g);landVisuals.push(g)}}
 rebuildLandState(false);makeIsland();
-function setTime(t){state.time=t;const cfg={day:[0x83bed0,0xffefd2,2.05,1.45,'☀️ 昼',1.04],sunset:[0xd58e72,0xffa45b,1.55,1.05,'🌇 夕方',.94],night:[0x18283d,0x94adff,.66,.52,'🌙 夜',.72]}[t];scene.background.set(cfg[0]);scene.fog.color.set(cfg[0]);sun.color.set(cfg[1]);sun.intensity=cfg[2];hemi.intensity=cfg[3];renderer.toneMappingExposure=cfg[5];cloudMat.color.set(t==='sunset'?0xf0cfb8:t==='night'?0x8895a8:0xf4f5f1);cloudMat.opacity=t==='night'?.55:.82;$('#weather').textContent=cfg[4];$$('[data-time]').forEach(b=>b.classList.toggle('active',b.dataset.time===t));save(true)}
-function landFor(c){return state.lands.find(l=>l.id===c.landId)||state.lands.find(l=>l.attr===c.attr)||null}
-
-const EXPANSION_RARE_DROP_RATE=.06;
-function rareExpansionFromToppings(count){
- let drops=0;
- for(let i=0;i<Math.max(0,Number(count||0));i++)if(Math.random()<EXPANSION_RARE_DROP_RATE)drops++;
- if(drops>0)state.expansionParts=(state.expansionParts||0)+drops;
- return drops
-}
-const LAND_REWARD_LIMITS={1:{toppings:4,coins:1000},2:{toppings:6,coins:2000},3:{toppings:10,coins:5000}};
-const COINS_PER_MINUTE_PER_CREATURE=10;
-function landResidents(l){return state.creatures.filter(c=>c.landId===l.id)}
-function landStoredToppingCount(l){return Object.values(l.storedFoods||{}).reduce((a,b)=>a+Number(b||0),0)}
-function accrueLandRewards(l,now=Date.now()){l.storedFoods=l.storedFoods||{};l.storedCoins=Number(l.storedCoins||0);l.lastCoinAt=Number(l.lastCoinAt||now);l.lastToppingAt=Number(l.lastToppingAt||now);const residents=landResidents(l),n=residents.length,lim=LAND_REWARD_LIMITS[l.level]||LAND_REWARD_LIMITS[1];if(!n){l.lastCoinAt=now;l.lastToppingAt=now;return}const mins=Math.floor((now-l.lastCoinAt)/60000);if(mins>0){l.storedCoins=Math.min(lim.coins,l.storedCoins+mins*n*COINS_PER_MINUTE_PER_CREATURE);l.lastCoinAt+=mins*60000}const hours=Math.floor((now-l.lastToppingAt)/3600000);if(hours>0){let room=Math.max(0,lim.toppings-landStoredToppingCount(l));const keys=Object.keys(FOOD),gain=Math.min(room,hours*n);for(let i=0;i<gain;i++){const k=keys[Math.floor(Math.random()*keys.length)];l.storedFoods[k]=(l.storedFoods[k]||0)+1}l.lastToppingAt+=hours*3600000}}
-function accrueAllLandRewards(now=Date.now()){state.lands.forEach(l=>accrueLandRewards(l,now))}
-function collectLandRewards(l){accrueLandRewards(l);const foodCount=landStoredToppingCount(l),coins=Math.floor(l.storedCoins||0);if(!foodCount&&!coins)return toast(`${l.name}にはまだ報酬がありません`);Object.entries(l.storedFoods||{}).forEach(([k,n])=>state.foods[k]=(state.foods[k]||0)+Number(n||0));const rare=rareExpansionFromToppings(foodCount);state.coins+=coins;l.storedFoods={};l.storedCoins=0;renderAll();save(true);toast(`${l.name}から 🍥${foodCount}個 / 🪙${coins}${rare?` / 🧩${rare} レアドロップ！`:''}`)}
-function rewardSummary(l){accrueLandRewards(l);const lim=LAND_REWARD_LIMITS[l.level]||LAND_REWARD_LIMITS[1];return{foods:landStoredToppingCount(l),coins:Math.floor(l.storedCoins||0),lim}}
-function landCount(l){return state.creatures.filter(c=>c.landId===l.id).length}
-function findRoomLand(attr){return state.lands.find(l=>l.attr===attr&&landCount(l)<l.cap)||null}
-function landHasRoom(attr){return !!findRoomLand(attr)}
-function creatureEmoji(c){const base={cat:'🐱',fox:'🦊',bird:'🐥',dragon:'🐲',slime:'🫧',beast:'🐯'}[c.archetype]||'🍜';return c.level>=20?'👑'+base:c.level>=10?'✨'+base:base}
-
-function evolveMesh(c){
- if(!c.mesh)return;
- const s=c.level>=20?.60:c.level>=10?.54:.48;
- c.mesh.scale.setScalar(s);
- c.mesh.traverse(o=>{
-   if(o.name?.startsWith('evo10_'))o.visible=c.level>=10;
-   if(o.name?.startsWith('evo20_'))o.visible=c.level>=20
- })
-}
-function pickTarget(c){const l=landFor(c);if(!l||!c.target)return;const margin=.38;c.target.set(l.x+(Math.random()-.5)*Math.max(.2,l.w-margin*2),0,l.z+(Math.random()-.5)*Math.max(.2,l.h-margin*2));c.nextPick=performance.now()+2500+Math.random()*4500}
-
-const creatureTextureCache=new Map();
-function creatureTexture(baseHex,accentHex,seed=0){
- const key=`${baseHex}-${accentHex}-${seed%17}`;if(creatureTextureCache.has(key))return creatureTextureCache.get(key);
- const cv=document.createElement('canvas');cv.width=cv.height=128;const ctx=cv.getContext('2d');
- const base='#'+new THREE.Color(baseHex).getHexString(),accent='#'+new THREE.Color(accentHex).getHexString();
- const grad=ctx.createRadialGradient(48,34,8,64,70,96);grad.addColorStop(0,'#ffffff');grad.addColorStop(.18,base);grad.addColorStop(1,new THREE.Color(baseHex).multiplyScalar(.68).getStyle());
- ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
- ctx.globalAlpha=.12;ctx.fillStyle=accent;
- for(let i=0;i<18;i++){const x=(seed*31+i*47)%128,y=(seed*19+i*67)%128,r=4+(i*7%13);ctx.beginPath();ctx.ellipse(x,y,r,r*.7,(i*.6)%Math.PI,0,Math.PI*2);ctx.fill()}
- ctx.globalAlpha=.05;ctx.fillStyle='#fff';
- for(let y=2;y<128;y+=5)for(let x=2;x<128;x+=5){if(((x*13+y*17+seed)%29)<5)ctx.fillRect(x,y,1.4,1.4)}
- const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(1.4,1.15);
- creatureTextureCache.set(key,tx);return tx
-}
-function makeCreatureMesh(c){
- const g=new THREE.Group();g.userData.creatureId=c.id;
- const attrCol=ATTR[c.attr]?.color||0xf2cf62;
- const base=new THREE.Color(c.color||0xd57d4a);
- const accent=new THREE.Color(attrCol).lerp(base,.25);
- const cream=new THREE.Color(0xf4e4c3).lerp(base,.08);
- const dark=new THREE.Color(base).multiplyScalar(.54);
- const furMat=new THREE.MeshStandardMaterial({color:0xffffff,map:creatureTexture(base.getHex(),accent.getHex(),c.variant||0),roughness:.82,metalness:0});
+function setTime(t){state.time=t;const cfg={day:[0x83bed0,0xffefd2,2.05,1.45,'☀️ 昼',1.04],sunset:[0xd58e72,0xffa45b,1.55,1.05,'🌇 夕方',.94],night:[0x18283d,0x94adff,.66,.52,'🌙 夜',.72]}[t];scene.background.set(cfg[0]);scene.fog.color.set(cfg[0]);sun.color.set(cfg[1]);sun.intensity=cfg[2];hemi.intensity=cfg[3];renderer.toneMappingExposure=cfg[5];cloudMat.color.set(t==='sunset'?0xf0cfb8:t==='night'?0x8895a8:0xf4f5f1);cloudMat.opacity=t==='night'?.55:.82;$('#weather').textContent=cfg[4];
  const accentMat=new THREE.MeshStandardMaterial({color:accent,roughness:.72,metalness:.01});
  const creamMat=new THREE.MeshStandardMaterial({color:cream,roughness:.86});
  const darkMat=new THREE.MeshStandardMaterial({color:dark,roughness:.8});
@@ -768,6 +743,25 @@ function renderQuests(){
  }).join('');
  if(cleared)setTimeout(()=>toast(cleared),40)
 }
+
+const TIME_PHASE_MS=10*60*1000;
+const TIME_PHASES=['day','sunset','night'];
+function currentAutoTime(){
+ const start=Number(state.timeCycleStart||Date.now()),elapsed=Math.max(0,Date.now()-start);
+ const idx=Math.floor(elapsed/TIME_PHASE_MS)%3;
+ return {phase:TIME_PHASES[idx],remaining:TIME_PHASE_MS-(elapsed%TIME_PHASE_MS),idx}
+}
+function applyAutoTime(force=false){
+ const t=currentAutoTime();
+ if(force||state.time!==t.phase){state.time=t.phase;setTime(t.phase);save(true)}
+ const info=$('#autoTimeInfo');
+ if(info){
+  const m=Math.floor(t.remaining/60000),sec=Math.floor((t.remaining%60000)/1000);
+  const label=t.phase==='day'?'☀️ 昼':t.phase==='sunset'?'🌇 夕方':'🌙 夜';
+  info.textContent=`${label} ・ 自動切替まで ${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+ }
+ const w=$('#weather');if(w)w.textContent=t.phase==='day'?'☀️ 昼':t.phase==='sunset'?'🌇 夕方':'🌙 夜'
+}
 function renderAll(){
  accrueAllLandRewards();
  const c=active();
@@ -797,7 +791,7 @@ function renderAll(){
 }
 function open(name){closePanels(false);openPanel=name;$('#panel-'+name).classList.add('show');$$('[data-open]').forEach(b=>b.classList.toggle('active',b.dataset.open===name))}
 function closePanels(){if(openPanel)$('#panel-'+openPanel)?.classList.remove('show');openPanel=null;$$('[data-open]').forEach(b=>b.classList.remove('active'));renderBuild()}
-$$('[data-open]').forEach(b=>b.onclick=()=>open(b.dataset.open));$$('.close').forEach(b=>b.onclick=()=>closePanels());$$('[data-time]').forEach(b=>b.onclick=()=>setTime(b.dataset.time));$$('[data-buildop]').forEach(b=>b.onclick=()=>{state.buildOp=b.dataset.buildop;$$('[data-buildop]').forEach(x=>x.classList.toggle('active',x===b));save(true)});
+$$('[data-open]').forEach(b=>b.onclick=()=>open(b.dataset.open));$$('.close').forEach(b=>b.onclick=()=>closePanels());
 $('#buildOn').onclick=()=>{state.buildMode=true;renderBuild();toast('建築モードON：地面をタップ')};$('#buildOff').onclick=()=>{state.buildMode=false;renderBuild();toast('建築モードOFF')};$('#rotateBtn').onclick=()=>{const key=state.selectedPlacedKey,p=key&&state.placed[key];if(!p)return toast('先に設置済みの装飾をタップしてください');p.rotation=((p.rotation||0)+1)%4;const old=buildMeshes[key];if(old)scene.remove(old);const [x,z]=key.split(',').map(Number);buildMeshes[key]=buildMesh(p.type,x,z,key);if(p.type==='pond')rebuildPonds();if(p.type==='whitefence')rebuildFences();if(p.type==='farmplot')updateFarmVisual(key);renderBuild();save(true);toast(`${DECOR[p.type]?.name||'装飾'}を90°回転しました`)};
 $('#expandBtn').onclick=()=>{if(state.expansionParts<2)return toast(`拡張パーツがあと${2-state.expansionParts}個必要です`);state.expansionParts-=2;state.terrainStock=(state.terrainStock||0)+1;toast('🟩 土地を1マス獲得しました。建築モードで海に設置できます');renderAll();save(true)};
 $('#expeditionBtn').onclick=()=>{const c=active();if(!c)return toast('仲間を選んでください');const btn=$('#expeditionBtn');if(btn.disabled)return;btn.disabled=true;let sec=30;btn.textContent=`遠征中… ${sec}秒`;const timer=setInterval(()=>{sec--;btn.textContent=`遠征中… ${sec}秒`;if(sec<=0){clearInterval(timer);const bonus=1+Math.floor((c.stats.luck||50)/35)+(c.rarity==='SSR'?3:c.rarity==='SR'?2:c.rarity==='R'?1:0);const keys=Object.keys(FOOD);for(let i=0;i<bonus;i++){const k=keys[Math.floor(Math.random()*keys.length)];state.foods[k]=(state.foods[k]||0)+1}const coins=35+bonus*12;state.coins+=coins;const rare=rareExpansionFromToppings(bonus);toast(`遠征成功！ +${coins}コイン / トッピング×${bonus}${rare?` / 🧩${rare} レアドロップ！`:''}`);state.stats.expeditions++;btn.disabled=false;btn.textContent='30秒遠征へ出発';renderAll();save(true)}},1000)};
@@ -805,7 +799,7 @@ $('#expeditionBtn').onclick=()=>{const c=active();if(!c)return toast('仲間を�
 $('#saveBtn').onclick=()=>save(false);
 function setupLogin(){
  const screen=$('#loginScreen'),input=$('#loginName'),info=$('#loginProfileInfo');
- input.value=profileName;info.textContent=`現在のプロフィール：${profileName}`;
+ input.value=profileName;info.textContent=`現在のプロフィール：${profileName}｜端末ID：${deviceId.slice(0,8)}`;
  $('#loginBtn').onclick=()=>{
    const requested=safeProfile(input.value);
    if(requested!==profileName){
@@ -820,29 +814,16 @@ function setupLogin(){
  input.addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()})
 }
 setupLogin();
-
-$('#exportSaveBtn').onclick=()=>{
- save(true);const payload={app:'RAMEN RANCH',version:SAVE_SCHEMA,profile:profileName,exportedAt:Date.now(),state:cleanStateForSave()};
- const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');
- a.href=URL.createObjectURL(blob);a.download=`ramen-ranch-${safeProfile(profileName)}-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('バックアップを書き出しました')
-};
-$('#importSaveFile').onchange=async e=>{
- const f=e.target.files?.[0];if(!f)return;
- try{
-  const parsed=JSON.parse(await f.text()),loaded=parsed.state||parsed;
-  if(!loaded||!Array.isArray(loaded.creatures))throw new Error('invalid save');
-  state={...defaults(),...loaded,profileName};normalize();save(true);location.reload()
- }catch(err){console.warn(err);toast('バックアップファイルを読み込めませんでした')}
- e.target.value=''
-};
-$('#homeCam').onclick=$('#resetCam').onclick=()=>{camera.position.set(15,14,18);controls.target.set(0,0,0);controls.update();toast('視点をリセット')};$('#dayBtn').onclick=()=>setTime(state.time==='day'?'sunset':state.time==='sunset'?'night':'day');$('#resetBtn').onclick=()=>{if(confirm('島のデータをすべて初期化しますか？')){localStorage.removeItem(saveKey());localStorage.removeItem('ramenRanchIsland');idbPut(saveKey(),null);localStorage.removeItem('ramenRanchFull');location.reload()}};
-setTime(state.time);renderAll();if(!state.creatures.length)setTimeout(()=>open('scan'),650);if(toastLater)setTimeout(()=>toast(toastLater),1200);setInterval(()=>save(true),15000);setInterval(()=>{accrueAllLandRewards();if(openPanel==='island')renderLands();save(true)},60000);
+$('#homeCam').onclick=$('#resetCam').onclick=()=>{camera.position.set(15,14,18);controls.target.set(0,0,0);controls.update();toast('視点をリセット')};$('#resetBtn').onclick=()=>{if(confirm('島のデータをすべて初期化しますか？')){localStorage.removeItem(saveKey());for(let i=1;i<=3;i++)localStorage.removeItem(backupKey(i));localStorage.removeItem('ramenRanchIsland');idbPut(saveKey(),null);localStorage.removeItem('ramenRanchFull');location.reload()}};
+applyAutoTime(true);renderAll();if(!state.creatures.length)setTimeout(()=>open('scan'),650);if(toastLater)setTimeout(()=>toast(toastLater),1200);setInterval(()=>save(true),15000);setInterval(()=>{accrueAllLandRewards();if(openPanel==='island')renderLands();save(true)},60000);
 function resize(){const h=document.querySelector('main').clientHeight,w=innerWidth;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}resize();addEventListener('resize',resize);let last=performance.now(),waveFrame=0;function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000);last=t;const pos=waterGeo.attributes.position.array;for(let i=0;i<pos.length;i+=3){const x=waterBase[i],y=waterBase[i+1];pos[i+2]=Math.sin(x*.22+t*.00115)*.075+Math.cos(y*.28-t*.0009)*.055+Math.sin((x+y)*.13+t*.00065)*.035}waterGeo.attributes.position.needsUpdate=true;if((waveFrame++%10)===0)waterGeo.computeVertexNormals();if((waveFrame%30)===0)refreshFarmVisuals();waterMat.opacity=.935+.018*Math.sin(t*.001);waterMat.roughness=.11+.025*(.5+.5*Math.sin(t*.0007));for(const cl of clouds){cl.position.x+=cl.userData.speed*dt;if(cl.position.x>82)cl.position.x=-82;cl.position.z+=Math.sin(t*.00008+cl.id)*.002}if(t>nextFishJump){spawnFish(t);nextFishJump=t+4200+Math.random()*9000}for(const f of fishes){if(!f.active)continue;const p=(t-f.start)/f.dur;if(p>=1){f.active=false;f.mesh.visible=false;continue}const travel=1.6*p;f.mesh.position.x=f.x+Math.cos(f.dir)*travel;f.mesh.position.z=f.z+Math.sin(f.dir)*travel;f.mesh.position.y=-.48+Math.sin(Math.PI*p)*f.height;f.mesh.rotation.z=-.55+1.1*p;f.mesh.rotation.x=Math.sin(Math.PI*p)*.16}for(const c of state.creatures){if(!c.mesh)continue;const l=landFor(c);if(!l)continue;if(!c.target)c.target=new THREE.Vector3();if(Math.abs(c.mesh.position.x-l.x)>l.w/2||Math.abs(c.mesh.position.z-l.z)>l.h/2)c.mesh.position.set(l.x,0,l.z);if(t>(c.nextPick||0)||c.mesh.position.distanceTo(c.target)<.24)pickTarget(c);const d=c.target.clone().sub(c.mesh.position);d.y=0;if(d.length()>.04){d.normalize();c.mesh.position.addScaledVector(d,dt*(.62+c.level/90));c.mesh.rotation.y=Math.atan2(d.x,d.z);c.mesh.position.y=Math.sin(t*.006+c.mesh.id)*.028;c.x=c.mesh.position.x;c.z=c.mesh.position.z}}controls.update();renderer.render(scene,camera)}loop(last);
 
 window.addEventListener('pagehide',()=>save(true));
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
 window.addEventListener('beforeunload',()=>{try{localStorage.setItem(saveKey(),JSON.stringify(cleanStateForSave()))}catch{}});
 setInterval(()=>save(true),30000);
+
+setInterval(()=>applyAutoTime(false),1000);
 </script>
 </body>
 </html>
