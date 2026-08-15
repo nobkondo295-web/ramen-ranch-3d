@@ -1,11 +1,12 @@
 <!doctype html>
+<!-- CREATURE REMAKE: fantasy farm companion style -->
 <!-- PREMIUM FARM REMAKE: graphics-only rebuild, gameplay preserved -->
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
 <meta name="theme-color" content="#11100e" />
-<title>RAMEN RANCH 3D - PREMIUM FARM REMAKE</title>
+<title>RAMEN RANCH 3D - CREATURE REMAKE</title>
 <style>
 :root{--bg:#142016;--panel:#223126e8;--panel2:#314333;--ink:#fffdf2;--muted:#d1d6c5;--line:#ffffff24;--accent:#f4b74e;--accent2:#ffe18b;--good:#7ed68c;--blue:#77cae6;--danger:#ff7168;--navh:78px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0;background:#142016;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif;overflow:hidden}button,input{font:inherit}button{border:0;color:inherit;background:none}button:disabled{opacity:.45}.app{height:100%;display:grid;grid-template-rows:62px 1fr;background:#1f3824}header{z-index:40;display:flex;align-items:center;justify-content:space-between;padding:0 13px;background:#0f0e0df2;border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}.brand{display:flex;align-items:center;gap:10px;font-weight:950;letter-spacing:.08em}.logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#ffb54e,#ee7426);font-size:22px;box-shadow:0 8px 24px #ff7c2c30}.brand small{display:block;color:#918674;font-size:7px;letter-spacing:.16em;margin-top:2px}.headstats{display:flex;gap:6px}.pill{border:1px solid var(--line);background:#ffffff09;padding:7px 9px;border-radius:999px;font-size:10px;font-weight:850}.pill b{color:var(--accent2)}
@@ -201,9 +202,141 @@ function landCount(l){return state.creatures.filter(c=>c.landId===l.id).length}
 function findRoomLand(attr){return state.lands.find(l=>l.attr===attr&&landCount(l)<l.cap)||null}
 function landHasRoom(attr){return !!findRoomLand(attr)}
 function creatureEmoji(c){const base={cat:'🐱',fox:'🦊',bird:'🐥',dragon:'🐲',slime:'🫧',beast:'🐯'}[c.archetype]||'🍜';return c.level>=20?'👑'+base:c.level>=10?'✨'+base:base}
-function evolveMesh(c){if(!c.mesh)return;const s=c.level>=20?.60:c.level>=10?.54:.48;c.mesh.scale.setScalar(s)}
+
+function evolveMesh(c){
+ if(!c.mesh)return;
+ const s=c.level>=20?.60:c.level>=10?.54:.48;
+ c.mesh.scale.setScalar(s);
+ c.mesh.traverse(o=>{
+   if(o.name?.startsWith('evo10_'))o.visible=c.level>=10;
+   if(o.name?.startsWith('evo20_'))o.visible=c.level>=20
+ })
+}
 function pickTarget(c){const l=landFor(c);if(!l||!c.target)return;const margin=.38;c.target.set(l.x+(Math.random()-.5)*Math.max(.2,l.w-margin*2),0,l.z+(Math.random()-.5)*Math.max(.2,l.h-margin*2));c.nextPick=performance.now()+2500+Math.random()*4500}
-function makeCreatureMesh(c){const g=new THREE.Group();g.userData.creatureId=c.id;const mat=new THREE.MeshStandardMaterial({color:c.color||0xd57d4a,roughness:.72});let body;if(c.archetype==='slime'){body=new THREE.Mesh(new THREE.SphereGeometry(.63,24,18),mat);body.scale.set(1.05,.78,1.05);body.position.y=.84}else if(c.archetype==='bird'){body=new THREE.Mesh(new THREE.SphereGeometry(.56,24,18),mat);body.scale.set(.86,1.12,.86);body.position.y=1.02}else if(c.archetype==='dragon'){body=new THREE.Mesh(new THREE.DodecahedronGeometry(.6,1),mat);body.position.y=.93}else{body=new THREE.Mesh(new THREE.SphereGeometry(.57,34,26),mat);body.scale.set(1,c.archetype==='cat'?1.04:1.08,.88);body.position.y=.88}body.castShadow=true;g.add(body);const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.73,.53,.38,28,1,true),new THREE.MeshStandardMaterial({color:c.bowlColor||0xf0e5d4,roughness:.7}));bowl.position.y=.45;g.add(bowl);const broth=new THREE.Mesh(new THREE.CylinderGeometry(.61,.61,.05,28),new THREE.MeshStandardMaterial({color:c.broth||0xc67545,roughness:.4}));broth.position.y=.66;g.add(broth);const eyeMat=new THREE.MeshStandardMaterial({color:0x17120f});for(const x of[-.2,.2]){const e=new THREE.Mesh(new THREE.SphereGeometry(.042,12,10),eyeMat);e.position.set(x,c.archetype==='bird'?1.08:.94,.53);g.add(e)}if(['cat','fox'].includes(c.archetype)){for(const x of[-.29,.29]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.17,.34,3),mat);ear.position.set(x,1.41,0);ear.rotation.z=x<0?.15:-.15;g.add(ear)}}if(c.archetype==='dragon'){for(const x of[-.33,.33]){const horn=new THREE.Mesh(new THREE.ConeGeometry(.1,.33,8),new THREE.MeshStandardMaterial({color:0xe9d6a4}));horn.position.set(x,1.47,0);horn.rotation.z=x<0?.25:-.25;g.add(horn)}}if(c.archetype==='bird'){for(const x of[-.55,.55]){const wing=new THREE.Mesh(new THREE.SphereGeometry(.27,12,10),mat);wing.scale.set(.45,1,.8);wing.position.set(x,.98,0);wing.rotation.z=x<0?-.5:.5;g.add(wing)}}if(c.variant%4===0){const t=new THREE.Mesh(new THREE.TorusGeometry(.16,.05,8,18),new THREE.MeshStandardMaterial({color:0xffeee0}));t.rotation.x=Math.PI/2;t.position.set(.22,1.18,.08);g.add(t)}else if(c.variant%4===1){const t=new THREE.Mesh(new THREE.BoxGeometry(.15,.04,.36),new THREE.MeshStandardMaterial({color:0x4c9b4d}));t.position.set(.2,1.17,.05);t.rotation.y=.6;g.add(t)}else if(c.variant%4===2){const t=new THREE.Mesh(new THREE.SphereGeometry(.14,12,8),new THREE.MeshStandardMaterial({color:0xffd15d}));t.position.set(.18,1.18,.05);g.add(t)}else{const t=new THREE.Mesh(new THREE.BoxGeometry(.22,.15,.22),new THREE.MeshStandardMaterial({color:0xd8895e}));t.position.set(.18,1.18,.03);g.add(t)}if(c.rarity==='SSR'){const halo=new THREE.Mesh(new THREE.TorusGeometry(.46,.025,8,32),new THREE.MeshStandardMaterial({color:0xffdc75,emissive:0x6a4300,emissiveIntensity:.5}));halo.rotation.x=Math.PI/2;halo.position.y=1.65;g.add(halo)}const l=landFor(c);g.position.set(c.x??l?.x??0,0,c.z??l?.z??0);scene.add(g);c.mesh=g;c.target=new THREE.Vector3();if(l)pickTarget(c);evolveMesh(c);return g}
+
+const creatureTextureCache=new Map();
+function creatureTexture(baseHex,accentHex,seed=0){
+ const key=`${baseHex}-${accentHex}-${seed%17}`;if(creatureTextureCache.has(key))return creatureTextureCache.get(key);
+ const cv=document.createElement('canvas');cv.width=cv.height=128;const ctx=cv.getContext('2d');
+ const base='#'+new THREE.Color(baseHex).getHexString(),accent='#'+new THREE.Color(accentHex).getHexString();
+ const grad=ctx.createRadialGradient(48,34,8,64,70,96);grad.addColorStop(0,'#ffffff');grad.addColorStop(.18,base);grad.addColorStop(1,new THREE.Color(baseHex).multiplyScalar(.68).getStyle());
+ ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
+ ctx.globalAlpha=.12;ctx.fillStyle=accent;
+ for(let i=0;i<18;i++){const x=(seed*31+i*47)%128,y=(seed*19+i*67)%128,r=4+(i*7%13);ctx.beginPath();ctx.ellipse(x,y,r,r*.7,(i*.6)%Math.PI,0,Math.PI*2);ctx.fill()}
+ ctx.globalAlpha=.05;ctx.fillStyle='#fff';
+ for(let y=2;y<128;y+=5)for(let x=2;x<128;x+=5){if(((x*13+y*17+seed)%29)<5)ctx.fillRect(x,y,1.4,1.4)}
+ const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;tx.wrapS=tx.wrapT=THREE.RepeatWrapping;tx.repeat.set(1.4,1.15);
+ creatureTextureCache.set(key,tx);return tx
+}
+function makeCreatureMesh(c){
+ const g=new THREE.Group();g.userData.creatureId=c.id;
+ const attrCol=ATTR[c.attr]?.color||0xf2cf62;
+ const base=new THREE.Color(c.color||0xd57d4a);
+ const accent=new THREE.Color(attrCol).lerp(base,.25);
+ const cream=new THREE.Color(0xf4e4c3).lerp(base,.08);
+ const dark=new THREE.Color(base).multiplyScalar(.54);
+ const furMat=new THREE.MeshStandardMaterial({color:0xffffff,map:creatureTexture(base.getHex(),accent.getHex(),c.variant||0),roughness:.82,metalness:0});
+ const accentMat=new THREE.MeshStandardMaterial({color:accent,roughness:.72,metalness:.01});
+ const creamMat=new THREE.MeshStandardMaterial({color:cream,roughness:.86});
+ const darkMat=new THREE.MeshStandardMaterial({color:dark,roughness:.8});
+ const eyeMat=new THREE.MeshStandardMaterial({color:0x17120f,roughness:.35});
+ const shineMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.18,emissive:0xffffff,emissiveIntensity:.05});
+ const hornMat=new THREE.MeshStandardMaterial({color:0xe9d7a8,roughness:.72});
+ const bowlMat=new THREE.MeshStandardMaterial({color:c.bowlColor||0xf0e5d4,roughness:.74});
+ const brothMat=new THREE.MeshStandardMaterial({color:c.broth||0xc67545,roughness:.42});
+ const add=(geo,mat,x,y,z,sx=1,sy=1,sz=1,name='')=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;m.name=name;g.add(m);return m};
+ const sph=(r,mat,x,y,z,sx=1,sy=1,sz=1,name='')=>add(new THREE.SphereGeometry(r,28,22),mat,x,y,z,sx,sy,sz,name);
+ const cone=(r,h,mat,x,y,z,rotZ=0,name='')=>{const m=add(new THREE.ConeGeometry(r,h,18),mat,x,y,z,1,1,1,name);m.rotation.z=rotZ;return m};
+
+ // body: low, compact, plush-like as in the reference creature style
+ let bodyY=.78,headY=1.05;
+ if(c.archetype==='bird'){bodyY=.82;headY=1.12}
+ if(c.archetype==='slime'){bodyY=.70;headY=.97}
+ const body=sph(.58,furMat,0,bodyY,0,1.18,.82,.90);
+ sph(.30,creamMat,0,bodyY-.03,.49,1.0,.75,.32); // chest/belly patch
+
+ // head + muzzle
+ const head=sph(.48,furMat,0,headY,.34,1.02,.92,.92);
+ sph(.24,creamMat,0,headY-.08,.72,1.05,.70,.66);
+ add(new THREE.SphereGeometry(.055,16,12),darkMat,0,headY-.03,.91,1,1,.65);
+
+ // eyes with highlights: large but not overly chibi
+ for(const x of[-.18,.18]){
+   sph(.067,eyeMat,x,headY+.07,.725,1,.92,.65);
+   sph(.018,shineMat,x-.018,headY+.095,.767,1,1,.5)
+ }
+
+ // four short legs/feet for terrestrial types
+ if(c.archetype!=='bird'&&c.archetype!=='slime'){
+   [[-.36,.35], [.36,.35],[-.34,-.25],[.34,-.25]].forEach(([x,z],i)=>{
+     add(new THREE.CapsuleGeometry(.11,.24,6,12),furMat,x,.34,z,1,.95,1);
+     sph(.13,darkMat,x,.17,z+.055,1.08,.62,1.22)
+   })
+ }
+
+ // archetype silhouettes
+ if(c.archetype==='fox'||c.archetype==='cat'){
+   for(const x of[-.27,.27]){
+     const ear=cone(.19,.40,furMat,x,1.48,.28,x<0?.10:-.10);
+     const inner=cone(.105,.25,accentMat,x,1.49,.345,x<0?.10:-.10);inner.scale.set(.72,.68,.72)
+   }
+   const tail=add(new THREE.TorusGeometry(.38,.12,14,28,Math.PI*1.4),furMat,-.47,.70,-.42);tail.rotation.set(Math.PI/2,.1,-.5);
+   if(c.archetype==='fox')sph(.13,creamMat,-.69,.83,-.56,1.1,.9,1)
+ }else if(c.archetype==='dragon'){
+   for(const x of[-.30,.30]){const h=cone(.115,.48,hornMat,x,1.53,.20,x<0?.36:-.36);h.rotation.x=-.16}
+   const tail=add(new THREE.ConeGeometry(.18,.78,16),furMat,0,.70,-.63);tail.rotation.x=-1.02;
+   for(let i=0;i<3;i++){const sp=cone(.095,.25,accentMat,0,1.02-i*.10,-.38-i*.15,Math.PI);sp.rotation.x=-.55}
+ }else if(c.archetype==='bird'){
+   for(const x of[-.48,.48]){const wing=sph(.31,furMat,x,.83,.02,.46,1.05,.82);wing.rotation.z=x<0?-.55:.55}
+   const beak=cone(.13,.34,accentMat,0,1.02,.88,Math.PI/2);beak.rotation.x=Math.PI/2;
+   for(const x of[-.17,.17]){add(new THREE.CylinderGeometry(.035,.045,.24,8),darkMat,x,.30,.06);sph(.08,darkMat,x,.17,.12,1.25,.45,1.5)}
+ }else if(c.archetype==='slime'){
+   // shell/hood creature, inspired by soft fantasy farm companions
+   body.scale.set(1.10,.70,1.0);head.scale.set(.92,.78,.86);
+   const hood=add(new THREE.ConeGeometry(.55,.78,24),creamMat,0,1.27,.18);hood.rotation.y=.12;
+   hood.scale.set(1,.78,1);
+   for(const x of[-.32,.32]){const arm=add(new THREE.CapsuleGeometry(.075,.30,5,10),creamMat,x,.42,.45);arm.rotation.z=x<0?-.55:.55}
+ }else{
+   // beast: characteristic long swept horns
+   for(const side of[-1,1]){
+     const horn=add(new THREE.TorusGeometry(.33,.075,12,28,Math.PI*1.45),hornMat,side*.37,1.38,.22);
+     horn.rotation.set(Math.PI/2,0,side*.55);horn.scale.set(side,1,1)
+   }
+   for(const x of[-.34,.34]){const ear=sph(.13,furMat,x,1.32,.30,1.15,.58,1.35);ear.rotation.z=x<0?-.35:.35}
+ }
+
+ // attribute accents integrated into the creature silhouette
+ if(c.attr==='fire'){
+   for(let i=-1;i<=1;i++){const f=cone(.11,.30,accentMat,i*.16,1.33,-.02,i*.10);f.rotation.x=-.18}
+ }else if(c.attr==='water'){
+   const fin=add(new THREE.TorusGeometry(.23,.055,10,24,Math.PI),accentMat,0,1.30,-.16);fin.rotation.x=Math.PI/2
+ }else if(c.attr==='forest'){
+   for(const x of[-.12,.12]){const leaf=add(new THREE.SphereGeometry(.11,14,10),accentMat,x,1.49,.05,1,.45,1.55);leaf.rotation.z=x<0?-.55:.55}
+ }else if(c.attr==='earth'){
+   for(const x of[-.28,.28])sph(.10,accentMat,x,.78,-.36,1.25,.75,1)
+ }else if(c.attr==='light'){
+   const halo=add(new THREE.TorusGeometry(.31,.025,10,36),accentMat,0,1.66,.08);halo.rotation.x=Math.PI/2
+ }else if(c.attr==='dark'){
+   for(const x of[-.22,.22]){const spike=cone(.085,.25,accentMat,x,1.45,.05,x<0?.20:-.20);spike.rotation.x=.18}
+ }
+
+ // ramen identity is a small saddle/badge rather than the entire body being a bowl
+ const bowl=add(new THREE.CylinderGeometry(.27,.21,.15,24,1,true),bowlMat,0,1.19,-.19);
+ const broth=add(new THREE.CylinderGeometry(.225,.225,.028,24),brothMat,0,1.275,-.19);
+ if(c.variant%4===0){const t=add(new THREE.TorusGeometry(.075,.022,8,18),creamMat,.07,1.315,-.14);t.rotation.x=Math.PI/2}
+ else if(c.variant%4===1){const t=add(new THREE.BoxGeometry(.06,.018,.15),accentMat,.06,1.31,-.15);t.rotation.y=.55}
+ else if(c.variant%4===2)sph(.06,new THREE.MeshStandardMaterial({color:0xffd15d,roughness:.7}),.06,1.32,-.14)
+ else add(new THREE.BoxGeometry(.09,.055,.09),new THREE.MeshStandardMaterial({color:0xd8895e,roughness:.75}),.06,1.32,-.14);
+
+ // evolution details: visible only at Lv10 / Lv20
+ for(const side of[-1,1]){
+   const e10=cone(.06,.24,accentMat,side*.38,1.49,.13,side*.18,`evo10_horn_${side}`);e10.visible=false;
+   const e20=add(new THREE.TorusGeometry(.16,.035,10,22,Math.PI*1.25),accentMat,side*.44,1.43,.09,1,1,1,`evo20_crown_${side}`);e20.rotation.set(Math.PI/2,0,side*.50);e20.visible=false
+ }
+ if(c.rarity==='SSR'){const aura=add(new THREE.TorusGeometry(.52,.018,8,42),new THREE.MeshStandardMaterial({color:0xffdf7b,emissive:0x704500,emissiveIntensity:.55}),0,.11,0);aura.rotation.x=Math.PI/2}
+
+ const l=landFor(c);g.position.set(c.x??l?.x??0,0,c.z??l?.z??0);scene.add(g);c.mesh=g;c.target=new THREE.Vector3();if(l)pickTarget(c);evolveMesh(c);return g
+}
 function classifyRamenStyle(s){const r=s.r,g=s.g,b=s.b,lum=s.lum,sat=s.sat;const redLead=r-Math.max(g,b),warm=(r+g*.72)-b*1.18;if(redLead>24&&r>145&&sat>72)return'担々';if(lum<116&&r>b*1.08&&warm>42)return'醤油';if(lum>150&&Math.abs(r-g)<38&&b>r*.78)return'海鮮';if(r>112&&g>78&&b<g*.88&&warm>55)return'味噌';const hash=Math.abs(Math.floor(r*17+g*29+b*37+lum*11+sat*7))%100;if(hash<30)return'味噌';if(hash<50)return'担々';if(hash<73)return'海鮮';return'醤油'}
 function creatureFromStats(s){const seed=Math.floor(s.r*19+s.g*31+s.b*43+s.lum*7+s.sat*13+Date.now()%997);const arch=['cat','fox','bird','dragon','slime','beast'][seed%6];const ramenStyle=s.ramenStyle||classifyRamenStyle(s);const rareRoll=Math.abs(Math.floor(seed/5+s.r*3+s.g*7+s.b*11))%100;let attr;if(ramenStyle==='味噌')attr=rareRoll<8?'dark':'earth';else if(ramenStyle==='担々')attr=rareRoll<8?'dark':'fire';else if(ramenStyle==='海鮮')attr=rareRoll<8?'light':'water';else attr=rareRoll<8?'light':'forest';const a=ATTR[attr];const pre=['メン','ダシ','コク','シオ','ミソ','ブタ','トリ','ネギ','ノリ','アジ','ユゲ','スープ'];const suf=['マル','ポン','ゴン','ニャ','ピヨ','リュウ','モチ','タン','クン','ヌシ','リン'];const traits=['陽気','甘えん坊','冒険好き','職人気質','おっとり','負けず嫌い','好奇心旺盛','食いしん坊','勇敢','気まぐれ','慎重','マイペース'];const roll=seed%100;const rarity=roll>94?'SSR':roll>79?'SR':roll>49?'R':'N';const keys=Object.keys(FOOD);const gains=[keys[seed%keys.length],keys[Math.floor(seed/7)%keys.length],keys[Math.floor(seed/13)%keys.length]];gains.forEach(k=>state.foods[k]=(state.foods[k]||0)+1);rareExpansionFromToppings(gains.length);const stats={power:35+seed%66,speed:35+Math.floor(seed/3)%66,luck:35+Math.floor(seed/7)%66,charm:35+Math.floor(seed/11)%66};if(rarity==='SSR')Object.keys(stats).forEach(k=>stats[k]=Math.min(100,stats[k]+15));else if(rarity==='SR')Object.keys(stats).forEach(k=>stats[k]=Math.min(100,stats[k]+8));const col=new THREE.Color(clamp(s.r/255+.07,0,1),clamp(s.g/255+.04,0,1),clamp(s.b/255+.03,0,1));return{id:crypto.randomUUID?.()||String(Date.now()+Math.random()),name:(s.customName||'').trim()||pre[seed%pre.length]+suf[Math.floor(seed/5)%suf.length],type:`${ramenStyle}系`,ramenStyle,attr,trait:traits[Math.floor(seed/4)%traits.length],archetype:arch,rarity,variant:seed%12,stats,color:col.getHex(),broth:new THREE.Color(clamp(s.r/220,0,1),clamp(s.g/240,0,1),clamp(s.b/260,0,1)).getHex(),bowlColor:[0xf4e7d2,0xd9e8ef,0x2d2925,0xd54b3e,0x466b9c,0xe2c464][Math.floor(seed/17)%6],level:1,xp:0,favorite:gains[0],landId:null,x:0,z:0,gains,photoData:s.dataUrl||'',takenAt:s.takenAt||Date.now(),scannedAt:Date.now()}}
 function addCreature(c,imgUrl){state.creatures.push(c);state.activeId=c.id;state.stats.scans++;makeCreatureMesh(c);$('#birthImg').src=imgUrl||'';$('#birthEmoji').textContent=creatureEmoji(c);$('#birthName').textContent=c.name;$('#birthType').textContent=`${c.type} / ${c.rarity}`;$('#birthTrait').textContent=c.trait;$('#birthLand').textContent=landFor(c).name;$('#birthModal').classList.add('show');$('#flash').classList.remove('go');void $('#flash').offsetWidth;$('#flash').classList.add('go');renderAll();save(true)}
@@ -317,7 +450,7 @@ function detailReactionType(c){return({cat:'hop',fox:'wiggle',bird:'flap',dragon
 function triggerDetailReaction(){if(!detailModel||!detailCurrentCreature)return;detailAction={type:detailReactionType(detailCurrentCreature),start:performance.now(),baseY:detailModel.position.y,baseRX:detailModel.rotation.x,baseRY:detailModel.rotation.y,baseRZ:detailModel.rotation.z};}
 function applyDetailReaction(t){if(!detailAction||!detailModel)return;const p=Math.min(1,(t-detailAction.start)/850),s=Math.sin(p*Math.PI),a=detailAction;detailModel.position.y=a.baseY;detailModel.rotation.set(a.baseRX,a.baseRY,a.baseRZ);if(a.type==='hop'){detailModel.position.y+=s*.48;detailModel.rotation.z=Math.sin(p*Math.PI*2)*.09}else if(a.type==='wiggle'){detailModel.rotation.y+=Math.sin(p*Math.PI*5)*.34;detailModel.rotation.z+=Math.sin(p*Math.PI*4)*.08}else if(a.type==='flap'){detailModel.position.y+=Math.sin(p*Math.PI*3)*.12;detailModel.rotation.z+=Math.sin(p*Math.PI*6)*.12}else if(a.type==='spin'){detailModel.rotation.y+=p*Math.PI*2;detailModel.position.y+=s*.18}else if(a.type==='bounce'){detailModel.position.y+=Math.abs(Math.sin(p*Math.PI*3))*.28;const squash=1-Math.abs(Math.sin(p*Math.PI*3))*.12;detailModel.scale.y=1.48*squash;detailModel.scale.x=detailModel.scale.z=1.48*(2-squash)}else if(a.type==='bow'){detailModel.rotation.x+=s*.42;detailModel.position.y-=s*.08}if(p>=1){detailModel.position.y=a.baseY;detailModel.rotation.set(a.baseRX,a.baseRY,a.baseRZ);detailModel.scale.setScalar(1.48);detailAction=null}}
 function ensureDetailRenderer(){const host=$('#detailModelStage');if(detailRenderer){const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);detailRenderer.setSize(w,h,false);detailCamera.aspect=w/h;detailCamera.updateProjectionMatrix();return}detailScene=new THREE.Scene();detailScene.background=new THREE.Color(0x171a16);detailCamera=new THREE.PerspectiveCamera(36,1,.1,50);detailCamera.position.set(0,1.45,4.25);detailRenderer=new THREE.WebGLRenderer({antialias:true,alpha:false});detailRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));detailRenderer.shadowMap.enabled=true;host.insertBefore(detailRenderer.domElement,host.firstChild);detailScene.add(new THREE.HemisphereLight(0xffffff,0x313b33,2.2));const dl=new THREE.DirectionalLight(0xffecd0,2.4);dl.position.set(-3,5,4);detailScene.add(dl);detailControls=new OrbitControls(detailCamera,detailRenderer.domElement);detailControls.enablePan=false;detailControls.enableDamping=true;detailControls.dampingFactor=.08;detailControls.minDistance=2.65;detailControls.maxDistance=6;detailControls.minPolarAngle=.2;detailControls.maxPolarAngle=Math.PI-.18;detailControls.target.set(0,.42,0);detailControls.update();detailRenderer.domElement.addEventListener('pointerdown',e=>detailTapStart={x:e.clientX,y:e.clientY,t:performance.now()});detailRenderer.domElement.addEventListener('pointerup',e=>{if(!detailTapStart)return;const moved=Math.hypot(e.clientX-detailTapStart.x,e.clientY-detailTapStart.y),dt=performance.now()-detailTapStart.t;detailTapStart=null;if(moved<9&&dt<420)triggerDetailReaction()});ensureDetailRenderer()}
-function showDetailModel(c){ensureDetailRenderer();detailCurrentCreature=c;if(detailModel)detailScene.remove(detailModel);const source=c.mesh||makeCreatureMesh(c);detailModel=source.clone(true);detailModel.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.castShadow=true}});detailModel.position.set(0,-.22,0);detailModel.scale.setScalar(1.48);detailModel.rotation.set(0,0,0);detailScene.add(detailModel);detailCamera.position.set(0,1.5,4.3);detailControls.target.set(0,.45,0);detailControls.update();detailAction=null;cancelAnimationFrame(detailAnim);const tick=(t)=>{if(!$('#creatureModal').classList.contains('show'))return;applyDetailReaction(t||performance.now());detailControls?.update();detailRenderer.render(detailScene,detailCamera);detailAnim=requestAnimationFrame(tick)};tick(performance.now())}
+function showDetailModel(c){ensureDetailRenderer();detailCurrentCreature=c;if(detailModel)detailScene.remove(detailModel);const source=c.mesh||makeCreatureMesh(c);detailModel=source.clone(true);detailModel.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.castShadow=true}});detailModel.position.set(0,-.22,0);detailModel.scale.setScalar(1.48);detailModel.rotation.set(0,0,0);detailScene.add(detailModel);detailCamera.position.set(0,1.45,4.6);detailControls.target.set(0,.58,.08);detailControls.update();detailAction=null;cancelAnimationFrame(detailAnim);const tick=(t)=>{if(!$('#creatureModal').classList.contains('show'))return;applyDetailReaction(t||performance.now());detailControls?.update();detailRenderer.render(detailScene,detailCamera);detailAnim=requestAnimationFrame(tick)};tick(performance.now())}
 function setDetailTab(tab){$$('[data-detailtab]').forEach(b=>b.classList.toggle('active',b.dataset.detailtab===tab));$('#detailViewModel').classList.toggle('active',tab==='model');$('#detailViewPhoto').classList.toggle('active',tab==='photo');if(tab==='model'&&detailRenderer)setTimeout(()=>ensureDetailRenderer(),30)}
 function showCreatureDetail(c){state.activeId=c.id;renderAll();detailCurrentCreature=c;renderDetailFoods(c);$('#detailName').textContent=`${creatureEmoji(c)} ${c.name}`;$('#detailPhoto').src=c.photoData||'';$('#detailPhoto').style.display=c.photoData?'block':'none';$('#detailXP').textContent=c.level>=20?'MAX':`${Math.round(c.xp||0)} / 100`;$('#detailXPBar').style.width=`${c.level>=20?100:clamp(c.xp||0,0,100)}%`;$('#detailTakenAt').textContent=new Date(c.takenAt||c.scannedAt||Date.now()).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});$('#detailAttr').textContent=`${ATTR[c.attr]?.emoji||''} ${ATTR[c.attr]?.name||'-'}`;$('#detailLevel').textContent=`Lv.${c.level} / 20`;$('#detailType').textContent=c.type||'-';setDetailTab('model');$('#creatureModal').classList.add('show');setTimeout(()=>showDetailModel(c),40)}
 function longPressTarget(e){setRay(e);const objs=[...Object.values(buildMeshes),...landVisuals];const hit=ray.intersectObjects(objs,true)[0];if(!hit)return null;const bo=ancestorData(hit.object,'buildKey');if(bo){const key=bo.userData.buildKey;return{kind:'decor',key,mesh:buildMeshes[key],data:state.placed[key],origKey:key}}const lo=ancestorData(hit.object,'landId');if(lo){const l=state.lands.find(x=>x.id===lo.userData.landId);if(l)return{kind:'land',land:l,mesh:lo,origX:l.gridX,origZ:l.gridZ}}return null}
